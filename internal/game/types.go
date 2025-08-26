@@ -28,3 +28,8 @@ type Game struct {
 	Attempts    [][]LetterResult
 	State       GameState
 }
+
+type WordList struct {
+	words []string
+	index map[string]int
+}
