@@ -15,3 +15,10 @@ func NewWordList(path string) (*WordList, error) {
 	}
 	return &WordList{words: words, index: index}, nil
 }
+
+func (wl *WordList) RandomWord() string {
+	if len(wl.words) == 0 {
+		return ""
+	}
+	return wl.words[utils.RandomInt(0, len(wl.words)-1)]
+}
