@@ -1,5 +1,7 @@
 package game
 
+import "unicode"
+
 func NewGame(answer string, maxAttempts int) *Game {
 	return &Game{
 		Answer:      answer,
@@ -24,7 +26,7 @@ func (g *Game) MakeGuess(guess string) ([]LetterResult, error) {
 	used := make([]bool, len(g.Answer))
 	// First pass: check for hits
 	for i, r := range guessRunes {
-		if r == answerRunes[i] {
+		if unicode.ToLower(r) == unicode.ToLower(answerRunes[i]) {
 			result[i] = LetterResult{Letter: r, Position: i, MatchType: Hit}
 			used[i] = true
 		}
@@ -36,7 +38,7 @@ func (g *Game) MakeGuess(guess string) ([]LetterResult, error) {
 		}
 		found := false
 		for j, ar := range answerRunes {
-			if !used[j] && r == ar {
+			if !used[j] && unicode.ToLower(r) == unicode.ToLower(ar) {
 				found = true
 				used[j] = true
 				break
