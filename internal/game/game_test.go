@@ -156,3 +156,29 @@ func TestMakeGuess_ExtraGuessLetterAfterPresentIsMiss(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeGuess_CaseInsensitivity(t *testing.T) {
+	game := NewGame("Apple", 6)
+	result, _ := game.MakeGuess("aPpLe")
+	// "aPpLe" vs "Apple"
+	// a: Hit, P: Hit, p: Hit, L: Hit, e: Hit
+	expected := []MatchType{Hit, Hit, Hit, Hit, Hit}
+	for i, lr := range result {
+		if lr.MatchType != expected[i] {
+			t.Errorf("At pos %d: expected %v, got %v", i, expected[i], lr.MatchType)
+		}
+	}
+}
+
+func TestMakeGuess_CaseInsensitivityWithPresents(t *testing.T) {
+	game := NewGame("Apple", 6)
+	result, _ := game.MakeGuess("pPale")
+	// "pPale" vs "Apple"
+	// p: Present, P: Hit, a: Present, l: Hit, e: Hit
+	expected := []MatchType{Present, Hit, Present, Hit, Hit}
+	for i, lr := range result {
+		if lr.MatchType != expected[i] {
+			t.Errorf("At pos %d: expected %v, got %v", i, expected[i], lr.MatchType)
+		}
+	}
+}
