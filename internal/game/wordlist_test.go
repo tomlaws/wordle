@@ -58,7 +58,7 @@ func TestIsValidWord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load word list: %v", err)
 	}
-	validWords := []string{"apple", "magic", "table"}
+	validWords := []string{"apple", "magic", "TaBlE"}
 	invalidWords := []string{"xyzzy", "foobar", "qwerty"}
 
 	for _, word := range validWords {
