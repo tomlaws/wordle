@@ -22,3 +22,8 @@ func (wl *WordList) RandomWord() string {
 	}
 	return wl.words[utils.RandomInt(0, len(wl.words)-1)]
 }
+
+func (wl *WordList) IsValidWord(word string) bool {
+	_, exists := wl.index[word]
+	return exists
+}
