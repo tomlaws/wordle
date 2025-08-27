@@ -52,3 +52,24 @@ func TestRandomWord(t *testing.T) {
 		t.Errorf("RandomWord returned a word not in the list: %s", word)
 	}
 }
+
+func TestIsValidWord(t *testing.T) {
+	wordList, err := NewWordList(path.Join("..", "..", "assets", "words.txt"))
+	if err != nil {
+		t.Fatalf("Failed to load word list: %v", err)
+	}
+	validWords := []string{"apple", "magic", "table"}
+	invalidWords := []string{"xyzzy", "foobar", "qwerty"}
+
+	for _, word := range validWords {
+		if !wordList.IsValidWord(word) {
+			t.Errorf("Expected %s to be a valid word", word)
+		}
+	}
+
+	for _, word := range invalidWords {
+		if wordList.IsValidWord(word) {
+			t.Errorf("Expected %s to be an invalid word", word)
+		}
+	}
+}
