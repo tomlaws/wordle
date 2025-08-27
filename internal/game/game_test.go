@@ -86,8 +86,8 @@ func TestMakeGuess_PartialMatch(t *testing.T) {
 func TestMakeGuess_InvalidLength(t *testing.T) {
 	game := NewGame("apple", 6)
 	result, err := game.MakeGuess("app")
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	if err == nil {
+		t.Fatalf("Expected error for invalid guess length, got nil")
 	}
 	if result != nil {
 		t.Errorf("Expected nil result for invalid guess length, got %v", result)
@@ -110,8 +110,8 @@ func TestMakeGuess_GameOver(t *testing.T) {
 		t.Errorf("Expected game state to be Lost after first guess, got %v", game.State)
 	}
 	result, err := game.MakeGuess("apple")
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	if err == nil {
+		t.Fatalf("Expected error when making guess after game over, got nil")
 	}
 	if result != nil {
 		t.Errorf("Expected nil result after game over, got %v", result)
@@ -190,8 +190,8 @@ func TestMakeGuess_MakeGuessAfterWin(t *testing.T) {
 		t.Errorf("Expected game state to be Won, got %v", game.State)
 	}
 	result, err := game.MakeGuess("grape")
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	if err == nil {
+		t.Fatalf("Expected error when making guess after game won, got nil")
 	}
 	if result != nil {
 		t.Errorf("Expected nil result after game won, got %v", result)
