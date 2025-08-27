@@ -1,6 +1,8 @@
 package game
 
 import (
+	"strings"
+
 	"github.com/tomlaws/wordle/pkg/utils"
 )
 
@@ -24,6 +26,7 @@ func (wl *WordList) RandomWord() string {
 }
 
 func (wl *WordList) IsValidWord(word string) bool {
+	word = strings.ToLower(word)
 	_, exists := wl.index[word]
 	return exists
 }
