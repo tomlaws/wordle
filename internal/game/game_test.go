@@ -182,3 +182,18 @@ func TestMakeGuess_CaseInsensitivityWithPresents(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeGuess_MakeGuessAfterWin(t *testing.T) {
+	game := NewGame("apple", 6)
+	game.MakeGuess("apple")
+	if game.State != Won {
+		t.Errorf("Expected game state to be Won, got %v", game.State)
+	}
+	result, err := game.MakeGuess("grape")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result != nil {
+		t.Errorf("Expected nil result after game won, got %v", result)
+	}
+}

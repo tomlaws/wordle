@@ -1,6 +1,9 @@
 package game
 
-import "unicode"
+import (
+	"errors"
+	"unicode"
+)
 
 func NewGame(answer string, maxAttempts int) *Game {
 	return &Game{
@@ -13,13 +16,11 @@ func NewGame(answer string, maxAttempts int) *Game {
 
 func (g *Game) MakeGuess(guess string) ([]LetterResult, error) {
 	if g.State != InProgress {
-		return nil, nil // Game already over
+		return nil, errors.New("game is not in progress")
 	}
-
 	if len(guess) != len(g.Answer) {
-		return nil, nil // Invalid guess length
+		return nil, errors.New("invalid guess length")
 	}
-
 	result := make([]LetterResult, len(guess))
 	answerRunes := []rune(g.Answer)
 	guessRunes := []rune(guess)
