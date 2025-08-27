@@ -31,3 +31,24 @@ func TestWordListInitialization_NonExistentFile(t *testing.T) {
 		t.Fatalf("Expected error for non-existent file, got nil")
 	}
 }
+
+func TestRandomWord(t *testing.T) {
+	wordList, err := NewWordList(path.Join("..", "..", "assets", "words.txt"))
+	if err != nil {
+		t.Fatalf("Failed to load word list: %v", err)
+	}
+	word := wordList.RandomWord()
+	if word == "" {
+		t.Errorf("RandomWord returned empty string")
+	}
+	found := false
+	for _, w := range wordList.words {
+		if w == word {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("RandomWord returned a word not in the list: %s", word)
+	}
+}
