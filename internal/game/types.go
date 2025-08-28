@@ -17,9 +17,9 @@ const (
 )
 
 type LetterResult struct {
-	Letter    rune
-	Position  int
-	MatchType MatchType
+	Letter    rune      `json:"letter"`
+	Position  int       `json:"position"`
+	MatchType MatchType `json:"match_type"`
 }
 
 type Game struct {
