@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"strings"
 	"unicode"
 )
 
@@ -52,7 +53,7 @@ func (g *Game) MakeGuess(guess string) ([]LetterResult, error) {
 		}
 	}
 	g.Attempts = append(g.Attempts, result)
-	if guess == g.Answer {
+	if strings.EqualFold(guess, g.Answer) {
 		g.State = Won
 	} else if len(g.Attempts) >= g.MaxAttempts {
 		g.State = Lost
