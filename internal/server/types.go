@@ -7,11 +7,13 @@ import (
 )
 
 const (
+	// Server to Client
 	MsgTypeGameStart   = "game_start"
-	MsgTypeGameOver    = "game_over"
-	MsgTypeGuess       = "guess"
 	MsgTypeInvalidWord = "invalid_word"
 	MsgTypeFeedback    = "feedback"
+	MsgTypeGameOver    = "game_over"
+	// Client to Server
+	MsgTypeGuess       = "guess"
 	MsgTypeConfirmPlay = "confirm_play"
 )
 
@@ -22,11 +24,6 @@ type Message struct {
 
 type GameStartPayload struct {
 	MaxAttempts int `json:"max_attempts"`
-}
-
-type GameOverPayload struct {
-	Won    bool   `json:"won"`
-	Answer string `json:"answer"`
 }
 
 type GuessRequest struct {
@@ -40,6 +37,11 @@ type InvalidWordResponse struct {
 type FeedbackResponse struct {
 	Feedback []game.LetterResult `json:"feedback"`
 	Round    int                 `json:"round"`
+}
+
+type GameOverPayload struct {
+	Won    bool   `json:"won"`
+	Answer string `json:"answer"`
 }
 
 type ConfirmPlayPayload struct {

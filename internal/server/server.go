@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"path"
@@ -28,14 +27,22 @@ func handleConnection(conn *websocket.Conn) {
 		g := game.NewGame(answer, maxAttempts)
 		log.Printf("New game started with answer: %s", answer)
 		// Send game_start to client
+		var gameStartPayloadJson []byte
+		if gameStartPayloadJson, err = json.Marshal(GameStartPayload{
+			MaxAttempts: maxAttempts,
+		}); err != nil {
+			log.Println("Error during game start payload marshalling:", err)
+			return
+		}
 		if err := conn.WriteJSON(Message{
 			Type: MsgTypeGameStart,
-			Data: json.RawMessage(`{"max_attempts":` + fmt.Sprintf("%d", maxAttempts) + `}`),
+			Data: gameStartPayloadJson,
 		}); err != nil {
 			log.Println("Error during game start message sending:", err)
 			return
 		}
 
+		var feedbackResponse FeedbackResponse
 		for g.State == game.InProgress {
 			var message Message
 			if err := conn.ReadJSON(&message); err != nil {
@@ -44,33 +51,38 @@ func handleConnection(conn *websocket.Conn) {
 			}
 
 			// Handle message
-			switch message.Type {
-			case MsgTypeGuess:
-				var guess GuessRequest
-				if err := json.Unmarshal(message.Data, &guess); err != nil {
-					log.Println("Error during guess message unmarshalling:", err)
+			var guess GuessRequest
+			if err := json.Unmarshal(message.Data, &guess); err != nil {
+				log.Println("Error during guess message unmarshalling:", err)
+				return
+			}
+			// Check if word is valid
+			if !wordlist.IsValidWord(guess.Word) {
+				// Send invalid_word message
+				var invalidWordResponseJson []byte
+				if invalidWordResponseJson, err = json.Marshal(InvalidWordResponse{
+					Word: guess.Word,
+				}); err != nil {
+					log.Println("Error during invalid word payload marshalling:", err)
 					return
 				}
-				// Check if word is valid
-				if !wordlist.IsValidWord(guess.Word) {
-					// Send invalid_word message
-					if err := conn.WriteJSON(Message{
-						Type: MsgTypeInvalidWord,
-						Data: json.RawMessage(fmt.Sprintf(`{"word":"%s"}`, guess.Word)),
-					}); err != nil {
-						log.Println("Error during invalid word message sending:", err)
-						return
-					}
-					continue
-				}
-				// Process guess
-				result, err := g.MakeGuess(guess.Word)
-				if err != nil {
-					log.Println("Error during guess processing:", err)
+				if err := conn.WriteJSON(Message{
+					Type: MsgTypeInvalidWord,
+					Data: invalidWordResponseJson,
+				}); err != nil {
+					log.Println("Error during invalid word message sending:", err)
 					return
 				}
+				continue
+			}
+			// Process guess
+			result, err := g.MakeGuess(guess.Word)
+			if err != nil {
+				log.Println("Error during guess processing:", err)
+				return
+			}
+			if g.State == game.InProgress {
 				// Send result back to client
-				var feedbackResponse FeedbackResponse
 				feedbackResponse.Feedback = result
 				feedbackResponse.Round = len(g.Attempts)
 				data, err := json.Marshal(feedbackResponse)
@@ -89,6 +101,24 @@ func handleConnection(conn *websocket.Conn) {
 				log.Printf("Sent feedback: %+v", feedbackResponse)
 			}
 		}
+
+		log.Printf("Game over. Answer: %s, State: %v", g.Answer, g.State)
+		var gameOverPayloadJson []byte
+		if gameOverPayloadJson, err = json.Marshal(GameOverPayload{
+			Answer: g.Answer,
+			Won:    g.State == game.Won,
+		}); err != nil {
+			log.Println("Error during game over payload marshalling:", err)
+			return
+		}
+		if err := conn.WriteJSON(Message{
+			Type: MsgTypeGameOver,
+			Data: gameOverPayloadJson,
+		}); err != nil {
+			log.Println("Error during game over message sending:", err)
+			return
+		}
+
 		// Check if player would like to play again
 		var message Message
 		for message.Type != MsgTypeConfirmPlay {
