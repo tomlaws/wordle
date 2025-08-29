@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	MsgTypeGameStart = "game_start"
-	MsgTypeGameOver  = "game_over"
-	MsgTypeGuess     = "guess"
-	MsgTypeFeedback  = "feedback"
+	MsgTypeGameStart   = "game_start"
+	MsgTypeGameOver    = "game_over"
+	MsgTypeGuess       = "guess"
+	MsgTypeInvalidWord = "invalid_word"
+	MsgTypeFeedback    = "feedback"
+	MsgTypeConfirmPlay = "confirm_play"
 )
 
 type Message struct {
@@ -31,6 +33,15 @@ type GuessRequest struct {
 	Word string `json:"word"`
 }
 
+type InvalidWordResponse struct {
+	Word string `json:"word"`
+}
+
 type FeedbackResponse struct {
 	Feedback []game.LetterResult `json:"feedback"`
+	Round    int                 `json:"round"`
+}
+
+type ConfirmPlayPayload struct {
+	Confirm bool `json:"confirm"`
 }
