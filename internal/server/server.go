@@ -61,6 +61,7 @@ func startGame(p1, p2 *Player) {
 
 	currentPlayer := gameStartPayload.Player1
 	g := game.NewGame(wordList.RandomWord(), 12)
+	log.Printf("Game started with answer: %s", g.Answer)
 	round := 1
 	var winner *Player
 
@@ -93,6 +94,10 @@ func startGame(p1, p2 *Player) {
 			}
 			// Process the guess
 			result, _ := g.MakeGuess(guessRequest.Word)
+			if g.State == game.Won {
+				winner = currentPlayer
+				break
+			}
 			// Send the feedback to both players
 			var feedbackResponse FeedbackResponse
 			feedbackResponse.Round = round
@@ -119,10 +124,30 @@ func startGame(p1, p2 *Player) {
 			}
 		}
 	}
+	// Game over
+	var gameOverPayload GameOverPayload
 	if winner != nil {
 		log.Printf("Player %s wins!", winner.Nickname)
+		gameOverPayload.Winner = winner
+		gameOverPayload.Answer = g.Answer
 	} else {
 		log.Printf("Game ended in a draw")
+		gameOverPayload.Winner = nil
+		gameOverPayload.Answer = g.Answer
+	}
+	log.Printf("Game over: %+v", gameOverPayload)
+	data, err := json.Marshal(gameOverPayload)
+	if err != nil {
+		log.Println("Error during game over marshalling:", err)
+		return
+	}
+	p1.outgoing <- &Message{
+		Type: MsgTypeGameOver,
+		Data: data,
+	}
+	p2.outgoing <- &Message{
+		Type: MsgTypeGameOver,
+		Data: data,
 	}
 }
 

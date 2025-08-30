@@ -101,7 +101,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			} else if gameOverPayload.Winner.ID == playerInfoPayload.ID {
 				fmt.Fprintln(output, "Congratulations! You've won!")
 			} else {
-				fmt.Fprintln(output, "Game over! The correct word was:", gameOverPayload.Answer)
+				fmt.Fprintln(output, "You've lost! The correct word was:", gameOverPayload.Answer)
 			}
 
 			// Ask for a new game
