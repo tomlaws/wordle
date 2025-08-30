@@ -65,7 +65,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				return err
 			}
 			// Start the game with the received payload
-			currentAttempt = 0
+			currentAttempt = 1
 			maxAttempts = gameStartPayload.MaxAttempts
 			isOddPlayer = gameStartPayload.Player1.ID == playerInfoPayload.ID
 			fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
@@ -77,7 +77,12 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				log.Println("Error during feedback payload unmarshalling:", err)
 				return err
 			}
-			currentAttempt = feedbackResponse.Round
+			if isOddPlayer && feedbackResponse.Round%2 == 0 || !isOddPlayer && feedbackResponse.Round%2 == 1 {
+				fmt.Printf("Opponent guessed: ")
+			} else {
+				fmt.Printf("You guessed: ")
+			}
+			currentAttempt = feedbackResponse.Round + 1
 			// Display feedback to the user
 			for _, lr := range feedbackResponse.Feedback {
 				switch lr.MatchType {
@@ -137,8 +142,8 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			}
 		}
 		// Handle guess input when it's the player's turn
-		if isOddPlayer && currentAttempt%2 == 0 || !isOddPlayer && currentAttempt%2 == 1 {
-			fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt+1, maxAttempts)
+		if isOddPlayer && currentAttempt%2 == 1 || !isOddPlayer && currentAttempt%2 == 0 {
+			fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt, maxAttempts)
 			var guess string
 			if _, err := fmt.Fscan(input, &guess); err != nil {
 				log.Println("Error during input reading:", err)
