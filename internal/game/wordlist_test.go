@@ -3,10 +3,12 @@ package game
 import (
 	"path"
 	"testing"
+
+	"github.com/tomlaws/wordle/pkg/utils"
 )
 
 func TestWordListInitialization(t *testing.T) {
-	wordList, err := NewWordList(path.Join("..", "..", "assets", "words.txt"))
+	wordList, err := NewWordList(path.Join(utils.Root, "assets", "words.txt"))
 	if err != nil {
 		t.Fatalf("Failed to load word list: %v", err)
 	}
@@ -33,7 +35,7 @@ func TestWordListInitialization_NonExistentFile(t *testing.T) {
 }
 
 func TestRandomWord(t *testing.T) {
-	wordList, err := NewWordList(path.Join("..", "..", "assets", "words.txt"))
+	wordList, err := NewWordList(path.Join(utils.Root, "assets", "words.txt"))
 	if err != nil {
 		t.Fatalf("Failed to load word list: %v", err)
 	}
@@ -54,7 +56,7 @@ func TestRandomWord(t *testing.T) {
 }
 
 func TestIsValidWord(t *testing.T) {
-	wordList, err := NewWordList(path.Join("..", "..", "assets", "words.txt"))
+	wordList, err := NewWordList(path.Join(utils.Root, "assets", "words.txt"))
 	if err != nil {
 		t.Fatalf("Failed to load word list: %v", err)
 	}

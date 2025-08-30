@@ -4,32 +4,27 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"path"
 
 	"github.com/gorilla/websocket"
 	"github.com/tomlaws/wordle/internal/game"
-	"github.com/tomlaws/wordle/pkg/utils"
 )
 
 var Upgrader = websocket.Upgrader{}
 
-func handleConnection(conn *websocket.Conn) {
-	var wordlist, err = game.NewWordList(path.Join(utils.Root, "assets", "words.txt"))
-	if err != nil {
-		log.Println("Error loading word list:", err)
-		return
-	}
+var maxGuesses int
+var wordList *game.WordList
 
+func handleConnection(conn *websocket.Conn) {
+	var err error
 	defer conn.Close()
 	for {
-		answer := wordlist.RandomWord()
-		maxAttempts := 6
-		g := game.NewGame(answer, maxAttempts)
+		answer := wordList.RandomWord()
+		g := game.NewGame(answer, maxGuesses)
 		log.Printf("New game started with answer: %s", answer)
 		// Send game_start to client
 		var gameStartPayloadJson []byte
 		if gameStartPayloadJson, err = json.Marshal(GameStartPayload{
-			MaxAttempts: maxAttempts,
+			MaxAttempts: maxGuesses,
 		}); err != nil {
 			log.Println("Error during game start payload marshalling:", err)
 			return
@@ -57,7 +52,7 @@ func handleConnection(conn *websocket.Conn) {
 				return
 			}
 			// Check if word is valid
-			if !wordlist.IsValidWord(guess.Word) {
+			if !wordList.IsValidWord(guess.Word) {
 				// Send invalid_word message
 				var invalidWordResponseJson []byte
 				if invalidWordResponseJson, err = json.Marshal(InvalidWordResponse{
@@ -145,6 +140,15 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Print("Error during connection upgradation:", err)
 		return
 	}
-
 	handleConnection(conn)
+}
+
+func Init(wordListPath string, maxAttempts int) func(w http.ResponseWriter, r *http.Request) {
+	maxGuesses = maxAttempts
+	var err error
+	wordList, err = game.NewWordList(wordListPath)
+	if err != nil {
+		log.Fatalf("Error loading word list: %v", err)
+	}
+	return SocketHandler
 }
