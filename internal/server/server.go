@@ -3,152 +3,214 @@ package server
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"sync/atomic"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/tomlaws/wordle/internal/game"
 )
 
 var Upgrader = websocket.Upgrader{}
-
-var maxGuesses int
+var queue = make(chan *Player, 100) // concurrency-safe queue
 var wordList *game.WordList
 
-func handleConnection(conn *websocket.Conn) {
-	var err error
-	defer conn.Close()
-	for {
-		answer := wordList.RandomWord()
-		g := game.NewGame(answer, maxGuesses)
-		log.Printf("New game started with answer: %s", answer)
-		// Send game_start to client
-		var gameStartPayloadJson []byte
-		if gameStartPayloadJson, err = json.Marshal(GameStartPayload{
-			MaxAttempts: maxGuesses,
-		}); err != nil {
-			log.Println("Error during game start payload marshalling:", err)
-			return
+func startGame(p1, p2 *Player) {
+	if p1.connected.Load() && p2.connected.Load() {
+		log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
+	} else {
+		if p1.connected.Load() {
+			log.Printf("Player %s is added back to the queue\n", p1.Nickname)
+			queue <- p1
+		} else {
+			log.Printf("Player %s disconnected before match\n", p1.Nickname)
 		}
-		if err := conn.WriteJSON(Message{
-			Type: MsgTypeGameStart,
-			Data: gameStartPayloadJson,
-		}); err != nil {
-			log.Println("Error during game start message sending:", err)
-			return
+		if p2.connected.Load() {
+			queue <- p2
+			log.Printf("Player %s is added back to the queue\n", p2.Nickname)
+		} else {
+			log.Printf("Player %s disconnected before match\n", p2.Nickname)
 		}
+		return
+	}
+	log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
+	// Select random player to start
+	gameStartPayload := GameStartPayload{
+		MaxAttempts: 12,
+	}
+	if rand.Intn(2) == 0 {
+		gameStartPayload.Player1 = p1
+		gameStartPayload.Player2 = p2
+	} else {
+		gameStartPayload.Player1 = p2
+		gameStartPayload.Player2 = p1
+	}
+	gameStartPayloadBytes, _ := json.Marshal(gameStartPayload)
 
-		var feedbackResponse FeedbackResponse
-		for g.State == game.InProgress {
-			var message Message
-			if err := conn.ReadJSON(&message); err != nil {
-				log.Println("Error during message reading:", err)
-				return
-			}
+	// add message to p1's outgoing
+	p1.outgoing <- &Message{
+		Type: MsgTypeGameStart,
+		Data: gameStartPayloadBytes,
+	}
+	p2.outgoing <- &Message{
+		Type: MsgTypeGameStart,
+		Data: gameStartPayloadBytes,
+	}
 
-			// Handle message
-			var guess GuessRequest
-			if err := json.Unmarshal(message.Data, &guess); err != nil {
-				log.Println("Error during guess message unmarshalling:", err)
-				return
+	currentPlayer := gameStartPayload.Player1
+	g := game.NewGame(wordList.RandomWord(), 12)
+	round := 1
+	var winner *Player
+
+	for round <= 12 && g.State == game.InProgress {
+		msg := <-currentPlayer.incoming
+		switch msg.Type {
+		case MsgTypeTyping:
+			var typingPayload TypingPayload
+			if err := json.Unmarshal(msg.Data, &typingPayload); err != nil {
+				break
 			}
-			// Check if word is valid
-			if !wordList.IsValidWord(guess.Word) {
-				// Send invalid_word message
-				var invalidWordResponseJson []byte
-				if invalidWordResponseJson, err = json.Marshal(InvalidWordResponse{
-					Word: guess.Word,
-				}); err != nil {
-					log.Println("Error during invalid word payload marshalling:", err)
-					return
+			// Send typing notification to the other player
+			if currentPlayer == p1 {
+				p2.outgoing <- &Message{
+					Type: MsgTypeTyping,
+					Data: msg.Data,
 				}
-				if err := conn.WriteJSON(Message{
-					Type: MsgTypeInvalidWord,
-					Data: invalidWordResponseJson,
-				}); err != nil {
-					log.Println("Error during invalid word message sending:", err)
-					return
+			} else {
+				p1.outgoing <- &Message{
+					Type: MsgTypeTyping,
+					Data: msg.Data,
 				}
-				continue
 			}
-			// Process guess
-			result, err := g.MakeGuess(guess.Word)
+		case MsgTypeGuess:
+			// Handle guess
+			log.Printf("Player %s guessed", currentPlayer.Nickname)
+			var guessRequest GuessRequest
+			if err := json.Unmarshal(msg.Data, &guessRequest); err != nil {
+				break
+			}
+			// Process the guess
+			result, _ := g.MakeGuess(guessRequest.Word)
+			// Send the feedback to both players
+			var feedbackResponse FeedbackResponse
+			feedbackResponse.Round = round
+			feedbackResponse.Feedback = result
+			data, err := json.Marshal(feedbackResponse)
 			if err != nil {
-				log.Println("Error during guess processing:", err)
+				log.Println("Error during feedback marshalling:", err)
 				return
 			}
-			if g.State == game.InProgress {
-				// Send result back to client
-				feedbackResponse.Feedback = result
-				feedbackResponse.Round = len(g.Attempts)
-				data, err := json.Marshal(feedbackResponse)
-				if err != nil {
-					log.Println("Error during feedback marshalling:", err)
-					return
-				}
-				response := Message{
-					Type: MsgTypeFeedback,
-					Data: data,
-				}
-				if err := conn.WriteJSON(response); err != nil {
-					log.Println("Error during response writing:", err)
-					return
-				}
-				log.Printf("Sent feedback: %+v", feedbackResponse)
+			p1.outgoing <- &Message{
+				Type: MsgTypeFeedback,
+				Data: data,
+			}
+			p2.outgoing <- &Message{
+				Type: MsgTypeFeedback,
+				Data: data,
+			}
+			// Swap players
+			round++
+			if currentPlayer == p1 {
+				currentPlayer = p2
+			} else {
+				currentPlayer = p1
 			}
 		}
-
-		log.Printf("Game over. Answer: %s, State: %v", g.Answer, g.State)
-		var gameOverPayloadJson []byte
-		if gameOverPayloadJson, err = json.Marshal(GameOverPayload{
-			Answer: g.Answer,
-			Won:    g.State == game.Won,
-		}); err != nil {
-			log.Println("Error during game over payload marshalling:", err)
-			return
-		}
-		if err := conn.WriteJSON(Message{
-			Type: MsgTypeGameOver,
-			Data: gameOverPayloadJson,
-		}); err != nil {
-			log.Println("Error during game over message sending:", err)
-			return
-		}
-
-		// Check if player would like to play again
-		var message Message
-		for message.Type != MsgTypeConfirmPlay {
-			if err := conn.ReadJSON(&message); err != nil {
-				log.Println("Error during confirm play message reading:", err)
-				return
-			}
-		}
-		var confirmPlayPayload ConfirmPlayPayload
-		if err := json.Unmarshal(message.Data, &confirmPlayPayload); err != nil {
-			log.Println("Error during confirm play message unmarshalling:", err)
-			return
-		}
-		if !confirmPlayPayload.Confirm {
-			return
-		}
+	}
+	if winner != nil {
+		log.Printf("Player %s wins!", winner.Nickname)
+	} else {
+		log.Printf("Game ended in a draw")
 	}
 }
 
-func SocketHandler(w http.ResponseWriter, r *http.Request) {
+func matchPlayer() {
+	for {
+		p1 := <-queue
+		p2 := <-queue
+		go startGame(p1, p2)
+		// Sleep briefly to avoid busy waiting
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func handleRead(player *Player) {
+	player.incoming = make(chan *Message)
+	defer func() {
+		player.connected.Store(false)
+		player.conn.Close()
+	}()
+	for {
+		var msg Message
+		if err := player.conn.ReadJSON(&msg); err != nil {
+			log.Printf("Error reading message from player %s: %v", player.Nickname, err)
+			break
+		}
+		player.incoming <- &msg
+		// Handle incoming messages
+		log.Printf("Received message from player %s: %v", player.Nickname, msg.Type)
+	}
+}
+
+func handleWrite(player *Player) {
+	player.outgoing = make(chan *Message)
+	defer func() {
+		player.connected.Store(false)
+		player.conn.Close()
+	}()
+	for {
+		msg := <-player.outgoing
+		if err := player.conn.WriteJSON(msg); err != nil {
+			log.Printf("Error sending message to player %s: %v", player.Nickname, err)
+			break
+		}
+		// Handle outgoing messages
+		log.Printf("Sending message to player %s: %s", player.Nickname, msg.Type)
+	}
+}
+
+func socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade our raw HTTP connection to a websocket based one
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Error during connection upgradation:", err)
 		return
 	}
-	handleConnection(conn)
+	nickname := r.URL.Query().Get("nickname")
+	player := &Player{
+		conn:      conn,
+		ID:        uuid.New().String(),
+		Nickname:  nickname,
+		connected: atomic.Bool{},
+	}
+	player.connected.Store(true)
+	go handleRead(player)
+	go handleWrite(player)
+
+	log.Printf("New player connected: %s (%s)", player.Nickname, player.ID)
+	// Send player info to client
+	playerInfoBytes, err := json.Marshal(player)
+	if err != nil {
+		log.Printf("Error marshalling player info: %v", err)
+		return
+	}
+	player.outgoing <- &Message{
+		Type: MsgTypePlayerInfo,
+		Data: playerInfoBytes,
+	}
+
+	// Add the new player to the queue
+	queue <- player
 }
 
 func Init(wordListPath string, maxAttempts int) func(w http.ResponseWriter, r *http.Request) {
-	maxGuesses = maxAttempts
 	var err error
 	wordList, err = game.NewWordList(wordListPath)
 	if err != nil {
 		log.Fatalf("Error loading word list: %v", err)
 	}
-	return SocketHandler
+	go matchPlayer()
+	return socketHandler
 }
