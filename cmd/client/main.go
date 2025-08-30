@@ -14,7 +14,11 @@ func main() {
 	fmt.Print("Enter server IP address: ")
 	fmt.Scan(&ipAddress)
 
-	client, err := client.New(ipAddress)
+	var nickname string
+	fmt.Print("Enter your nickname: ")
+	fmt.Scan(&nickname)
+
+	client, err := client.New(ipAddress, nickname)
 	if err != nil {
 		log.Fatal("Error creating client:", err)
 	}
