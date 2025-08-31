@@ -300,13 +300,20 @@ func handleWrite(player *Player) {
 }
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
+	nickname := r.URL.Query().Get("nickname")
+	// Reject if username is blank
+	if nickname == "" {
+		log.Printf("Player connected with blank nickname")
+		return
+	}
+
 	// Upgrade our raw HTTP connection to a websocket based one
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Error during connection upgradation:", err)
 		return
 	}
-	nickname := r.URL.Query().Get("nickname")
+
 	player := &Player{
 		conn:     conn,
 		ID:       uuid.New().String(),
