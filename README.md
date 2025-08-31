@@ -30,7 +30,7 @@ or to provide a custom configuration
 ```sh
 go run -ldflags="-X main.Port=8080 -X main.MaxGuesses=12 -X main.WordListPath=assets/words.txt -X main.ThinkTime=60" cmd/server/main.go
 ```
-## Configuration
+#### Configuration
 - **Port:** The server listens on port 8080 by default.
 - **Max Guesses:** The maximum number of guesses per player is 12 by default.
 - **Word List:** The default word list is located at `assets/words.txt`.
@@ -41,18 +41,6 @@ go run -ldflags="-X main.Port=8080 -X main.MaxGuesses=12 -X main.WordListPath=as
 go run cmd/client/main.go
 ```
 
-### Running the Standalone
-```sh
-go run cmd/standalone/main.go
-```
-or to provide a custom configuration
-```sh
-go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
-```
-## Configuration
-- **Max Guesses:** The maximum number of guesses per player is 12 by default.
-- **Word List:** The default word list is located at `assets/words.txt`.
-
 ## Usage
 - Start the server and client as above.
 - The client will connect to the server, join the matchmaking queue, and start a game when matched.
@@ -61,6 +49,19 @@ go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd
 
 ## Design
 See `GAME_DESIGN.md` for full details on architecture, game flow, and design decisions.
+
+## Standalone Version
+### Running the Standalone
+```sh
+go run cmd/standalone/main.go
+```
+or to provide a custom configuration
+```sh
+go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
+```
+#### Configuration
+- **Max Guesses:** The maximum number of guesses per player is 12 by default.
+- **Word List:** The default word list is located at `assets/words.txt`.
 
 ## Acknowledgments
 - Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html).
