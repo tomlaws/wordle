@@ -19,18 +19,18 @@ var wordList *game.WordList
 func checkPlayAgain(player *Player) bool {
 	msg := <-player.incoming
 	if msg.Type == MsgTypePlayAgain {
-		var confirmPlayPayload ConfirmPlayPayload
-		if err := json.Unmarshal(msg.Data, &confirmPlayPayload); err != nil {
+		var playAgainPayload PlayAgainPayload
+		if err := json.Unmarshal(msg.Data, &playAgainPayload); err != nil {
 			log.Println("Error unmarshalling play again response:", err)
 			return false
 		}
-		if !confirmPlayPayload.Confirm {
+		if !playAgainPayload.Confirm {
 			log.Printf("Player %s declined to play again", player.Nickname)
 		} else {
 			log.Printf("Player %s wants to play again", player.Nickname)
 			enqueuePlayer(player)
 		}
-		return confirmPlayPayload.Confirm
+		return playAgainPayload.Confirm
 	}
 
 	return false
@@ -65,24 +65,28 @@ func startGame(p1, p2 *Player) {
 	g := game.NewGame(wordList.RandomWord(), 12)
 	log.Printf("Game started with answer: %s", g.Answer)
 	round := 1
+	timeout := 60 * time.Second
 	var winner *Player
 
 	for round <= 12 && g.State == game.InProgress && winner == nil {
-		var turnStartPayload TurnStartPayload
-		turnStartPayload.Player = currentPlayer
-		data, err := json.Marshal(turnStartPayload)
+		var roundStartPayload RoundStartPayload
+		roundStartPayload.Player = currentPlayer
+		roundStartPayload.Round = round
+		roundStartPayload.Timeout = int(timeout.Seconds())
+		data, err := json.Marshal(roundStartPayload)
 		if err != nil {
-			log.Println("Error during turn start payload marshalling:", err)
+			log.Println("Error during round start payload marshalling:", err)
 			return
 		}
 		p1.outgoing <- &Message{
-			Type: MsgTypeTurnStart,
+			Type: MsgTypeRoundStart,
 			Data: data,
 		}
 		p2.outgoing <- &Message{
-			Type: MsgTypeTurnStart,
+			Type: MsgTypeRoundStart,
 			Data: data,
 		}
+		roundTimeout := time.After(timeout)
 		select {
 		case p1Err := <-p1.error:
 			log.Println("Error from player 1:", p1Err)
@@ -90,6 +94,31 @@ func startGame(p1, p2 *Player) {
 		case p2Err := <-p2.error:
 			log.Println("Error from player 2:", p2Err)
 			winner = p1
+		case <-roundTimeout:
+			log.Println("Guess timeout for player:", currentPlayer.Nickname)
+			// Send timeout message
+			var guessTimeoutPayload GuessTimeoutPayload
+			guessTimeoutPayload.Player = currentPlayer
+			data, err := json.Marshal(guessTimeoutPayload)
+			if err != nil {
+				log.Println("Error during guess timeout payload marshalling:", err)
+				return
+			}
+			p1.outgoing <- &Message{
+				Type: MsgTypeGuessTimeout,
+				Data: data,
+			}
+			p2.outgoing <- &Message{
+				Type: MsgTypeGuessTimeout,
+				Data: data,
+			}
+			// Swap players
+			round++
+			if currentPlayer == p1 {
+				currentPlayer = p2
+			} else {
+				currentPlayer = p1
+			}
 		case msg := <-currentPlayer.incoming:
 			switch msg.Type {
 			case MsgTypeTyping:
