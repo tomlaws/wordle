@@ -36,11 +36,11 @@ func checkPlayAgain(player *Player) bool {
 	return false
 }
 
-func startGame(p1, p2 *Player) {
+func startGame(p1, p2 *Player, maxGuesses int) {
 	log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
 	// Select random player to start
 	gameStartPayload := GameStartPayload{
-		MaxAttempts: 12,
+		MaxGuesses: maxGuesses,
 	}
 	// Player 1 goes first
 	if rand.Intn(2) == 0 {
@@ -61,7 +61,7 @@ func startGame(p1, p2 *Player) {
 		Payload: gameStartPayloadBytes,
 	}
 	currentPlayer := gameStartPayload.Player1
-	g := game.NewGame(wordList.RandomWord(), 12)
+	g := game.NewGame(wordList.RandomWord(), gameStartPayload.MaxGuesses)
 	log.Printf("Game started with answer: %s", g.Answer)
 	round := 1
 	timeout := 60 * time.Second
@@ -227,7 +227,7 @@ func startGame(p1, p2 *Player) {
 	go checkPlayAgain(p2)
 }
 
-func matchPlayer() {
+func matchPlayer(maxGuesses int) {
 	for {
 		p1 := <-queue
 		p2 := <-queue
@@ -242,7 +242,7 @@ func matchPlayer() {
 				queue <- p1
 			case <-timeout:
 				log.Printf("Start game between %s and %s", p1.Nickname, p2.Nickname)
-				startGame(p1, p2)
+				startGame(p1, p2, maxGuesses)
 			}
 		}()
 		// Sleep briefly to avoid busy waiting
@@ -341,12 +341,12 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	enqueuePlayer(player)
 }
 
-func Init(wordListPath string, maxAttempts int) func(w http.ResponseWriter, r *http.Request) {
+func Init(wordListPath string, maxGuesses int) func(w http.ResponseWriter, r *http.Request) {
 	var err error
 	wordList, err = game.NewWordList(wordListPath)
 	if err != nil {
 		log.Fatalf("Error loading word list: %v", err)
 	}
-	go matchPlayer()
+	go matchPlayer(maxGuesses)
 	return socketHandler
 }

@@ -3,18 +3,19 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 
-	"github.com/joho/godotenv"
 	"github.com/tomlaws/wordle/internal/game"
 )
+
+var MaxGuesses string = "6"
+var WordListPath string = "assets/words.txt"
 
 func RunGame(input io.Reader, output io.Writer, wordListPath string, maxGuesses int) {
 	fmt.Fprintln(output, "Welcome to Wordle!")
 	for {
-		fmt.Fprintf(output, "Guess the 5-letter word in %d attempts.\n", maxGuesses)
+		fmt.Fprintf(output, "Guess the 5-letter word in %d rounds.\n", maxGuesses)
 		wordlist, err := game.NewWordList(wordListPath)
 		if err != nil {
 			fmt.Fprintf(output, "Error loading word list: %v\n", err)
@@ -78,26 +79,9 @@ func RunGame(input io.Reader, output io.Writer, wordListPath string, maxGuesses 
 }
 
 func main() {
-	// Default settings
-	wordListPath := "assets/words.txt"
-	maxGuesses := 6
-
-	// Override default values with .env settings
-	err := godotenv.Load()
-	if err != nil {
-		log.Print("Cannot load .env file. Using default settings.")
-	} else {
-		if mg, err := strconv.Atoi(os.Getenv("MAX_GUESSES")); mg != 0 && err == nil {
-			maxGuesses = mg
-		} else {
-			log.Print("Invalid MAX_GUESSES value. Using default.")
-		}
-		if wlPath := os.Getenv("WORDLIST_PATH"); wlPath != "" {
-			wordListPath = wlPath
-		} else {
-			log.Print("WORDLIST_PATH not set. Using default.")
-		}
+	maxGuessesInt := 6
+	if mg, err := strconv.Atoi(MaxGuesses); err == nil {
+		maxGuessesInt = mg
 	}
-
-	RunGame(os.Stdin, os.Stdout, wordListPath, maxGuesses)
+	RunGame(os.Stdin, os.Stdout, WordListPath, maxGuessesInt)
 }

@@ -23,10 +23,10 @@ type LetterResult struct {
 }
 
 type Game struct {
-	Answer      string
-	MaxAttempts int
-	Attempts    [][]LetterResult
-	State       GameState
+	Answer     string
+	MaxGuesses int
+	Attempts   [][]LetterResult
+	State      GameState
 }
 
 type WordList struct {

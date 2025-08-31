@@ -99,7 +99,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 	go handleWrite(c)
 	var err error
 	var me server.Player
-	var maxAttempts int
+	var maxGuesses int
 	var currentRound int
 	var isOddPlayer bool
 	for {
@@ -121,7 +121,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during game start payload unmarshalling:", err)
 					return err
 				}
-				maxAttempts = gameStartPayload.MaxAttempts
+				maxGuesses = gameStartPayload.MaxGuesses
 				isOddPlayer = gameStartPayload.Player1.ID == me.ID
 				var opponent *server.Player
 				if isOddPlayer {
@@ -130,7 +130,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					opponent = gameStartPayload.Player1
 				}
 				fmt.Fprintf(output, "You are playing against %s\n", opponent.Nickname)
-				fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
+				fmt.Fprintln(output, "Guess the 5-letter word in", maxGuesses, "rounds.")
 			case server.MsgTypeRoundStart:
 				var roundStartPayload server.RoundStartPayload
 				if err := json.Unmarshal(msg.Payload, &roundStartPayload); err != nil {
@@ -142,15 +142,15 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				timeout := roundStartPayload.Timeout
 				// Handle guess input when it's the player's turn
 				if roundStartPayload.Player.ID == me.ID {
-					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
+					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxGuesses)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
 					if sameRound {
 						fmt.Fprintln(output, "You have", timeout, "seconds to make your guess.")
 					}
-					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxAttempts)
+					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxGuesses)
 				} else {
 					// Wait for opponent's guess
-					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
+					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxGuesses)
 					fmt.Fprintln(output, "Waiting for opponent's guess...")
 				}
 			case server.MsgTypeInvalidWord:
@@ -230,7 +230,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				// Check if text is 5
 				if len(input.Text) != 5 {
 					fmt.Fprintln(output, "Invalid input. Please enter a 5-letter word.")
-					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxAttempts)
+					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxGuesses)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
 					continue
 				}
