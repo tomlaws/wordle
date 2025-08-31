@@ -11,12 +11,22 @@ import (
 func main() {
 	// Ask for IP address to connect
 	var ipAddress string
-	fmt.Print("Enter server IP address: ")
-	fmt.Scan(&ipAddress)
+	for ipAddress == "" {
+		fmt.Print("Enter server IP address: ")
+		fmt.Scanln(&ipAddress)
+		if ipAddress == "" {
+			fmt.Println("IP address cannot be empty. Please try again.")
+		}
+	}
 
 	var nickname string
-	fmt.Print("Enter your nickname: ")
-	fmt.Scan(&nickname)
+	for nickname == "" {
+		fmt.Print("Enter your nickname: ")
+		fmt.Scanln(&nickname)
+		if nickname == "" {
+			fmt.Println("Nickname cannot be empty. Please try again.")
+		}
+	}
 
 	client, err := client.New(ipAddress, nickname)
 	if err != nil {
