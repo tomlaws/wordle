@@ -17,27 +17,22 @@ var queue = make(chan *Player, 100) // concurrency-safe queue
 var wordList *game.WordList
 
 func checkPlayAgain(player *Player) bool {
-	timeout := time.After(10 * time.Second)
-	select {
-	case msg := <-player.incoming:
-		if msg.Type == MsgTypePlayAgain {
-			var confirmPlayPayload ConfirmPlayPayload
-			if err := json.Unmarshal(msg.Data, &confirmPlayPayload); err != nil {
-				log.Println("Error unmarshalling play again response:", err)
-				return false
-			}
-			if !confirmPlayPayload.Confirm {
-				log.Printf("Player %s declined to play again", player.Nickname)
-			} else {
-				log.Printf("Player %s wants to play again", player.Nickname)
-				enqueuePlayer(player)
-			}
-			return confirmPlayPayload.Confirm
+	msg := <-player.incoming
+	if msg.Type == MsgTypePlayAgain {
+		var confirmPlayPayload ConfirmPlayPayload
+		if err := json.Unmarshal(msg.Data, &confirmPlayPayload); err != nil {
+			log.Println("Error unmarshalling play again response:", err)
+			return false
 		}
-	case <-timeout:
-		log.Printf("Disconnected: Player %s did not respond to play again prompt", player.Nickname)
-		player.error <- nil
+		if !confirmPlayPayload.Confirm {
+			log.Printf("Player %s declined to play again", player.Nickname)
+		} else {
+			log.Printf("Player %s wants to play again", player.Nickname)
+			enqueuePlayer(player)
+		}
+		return confirmPlayPayload.Confirm
 	}
+
 	return false
 }
 
