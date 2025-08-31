@@ -18,7 +18,7 @@ func New(ipAddress string, nickname string) (*Client, error) {
 	// Connect to the websocket (port 8080)
 	u := url.URL{
 		Scheme:   "ws",
-		Host:     fmt.Sprintf("%s:%d", ipAddress, 8080),
+		Host:     ipAddress,
 		Path:     "/socket",
 		RawQuery: fmt.Sprintf("nickname=%s", nickname),
 	}
