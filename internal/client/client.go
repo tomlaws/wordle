@@ -121,6 +121,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during game start payload unmarshalling:", err)
 					return err
 				}
+				currentRound = 1
 				maxGuesses = gameStartPayload.MaxGuesses
 				isOddPlayer = gameStartPayload.Player1.ID == me.ID
 				var opponent *server.Player
