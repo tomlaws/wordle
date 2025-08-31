@@ -8,6 +8,7 @@ import (
 	"github.com/tomlaws/wordle/internal/server"
 )
 
+var Port string = "8080"
 var MaxGuesses string = "12"
 var ThinkTime string = "60"
 var WordListPath string = "assets/words.txt"
@@ -30,8 +31,8 @@ func main() {
 	}
 
 	http.HandleFunc("/socket", server.Init(WordListPath, maxGuessesInt, thinkTimeInt))
-	log.Printf("Server starting on %s", ":8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Printf("Server starting on %s", ":"+Port)
+	if err := http.ListenAndServe(":"+Port, nil); err != nil {
 		log.Fatal("Error starting server:", err)
 	}
 }
