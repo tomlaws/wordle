@@ -20,7 +20,7 @@ func checkPlayAgain(player *Player) bool {
 	msg := <-player.incoming
 	if msg.Type == MsgTypePlayAgain {
 		var playAgainPayload PlayAgainPayload
-		if err := json.Unmarshal(msg.Data, &playAgainPayload); err != nil {
+		if err := json.Unmarshal(msg.Payload, &playAgainPayload); err != nil {
 			log.Println("Error unmarshalling play again response:", err)
 			return false
 		}
@@ -53,12 +53,12 @@ func startGame(p1, p2 *Player) {
 	gameStartPayloadBytes, _ := json.Marshal(gameStartPayload)
 
 	p1.outgoing <- &Message{
-		Type: MsgTypeGameStart,
-		Data: gameStartPayloadBytes,
+		Type:    MsgTypeGameStart,
+		Payload: gameStartPayloadBytes,
 	}
 	p2.outgoing <- &Message{
-		Type: MsgTypeGameStart,
-		Data: gameStartPayloadBytes,
+		Type:    MsgTypeGameStart,
+		Payload: gameStartPayloadBytes,
 	}
 	currentPlayer := gameStartPayload.Player1
 	g := game.NewGame(wordList.RandomWord(), 12)
@@ -78,12 +78,12 @@ func startGame(p1, p2 *Player) {
 			return
 		}
 		p1.outgoing <- &Message{
-			Type: MsgTypeRoundStart,
-			Data: data,
+			Type:    MsgTypeRoundStart,
+			Payload: data,
 		}
 		p2.outgoing <- &Message{
-			Type: MsgTypeRoundStart,
-			Data: data,
+			Type:    MsgTypeRoundStart,
+			Payload: data,
 		}
 		roundTimeout := time.After(timeout)
 		select {
@@ -98,18 +98,18 @@ func startGame(p1, p2 *Player) {
 			// Send timeout message
 			var guessTimeoutPayload GuessTimeoutPayload
 			guessTimeoutPayload.Player = currentPlayer
-			data, err := json.Marshal(guessTimeoutPayload)
+			payload, err := json.Marshal(guessTimeoutPayload)
 			if err != nil {
 				log.Println("Error during guess timeout payload marshalling:", err)
 				return
 			}
 			p1.outgoing <- &Message{
-				Type: MsgTypeGuessTimeout,
-				Data: data,
+				Type:    MsgTypeGuessTimeout,
+				Payload: payload,
 			}
 			p2.outgoing <- &Message{
-				Type: MsgTypeGuessTimeout,
-				Data: data,
+				Type:    MsgTypeGuessTimeout,
+				Payload: payload,
 			}
 			// Swap players
 			round++
@@ -122,70 +122,70 @@ func startGame(p1, p2 *Player) {
 			switch msg.Type {
 			case MsgTypeTyping:
 				var typingPayload TypingPayload
-				if err := json.Unmarshal(msg.Data, &typingPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &typingPayload); err != nil {
 					break
 				}
 				// Send typing notification to the other player
 				if currentPlayer == p1 {
 					p1.outgoing <- &Message{
-						Type: MsgTypeTyping,
-						Data: data,
+						Type:    MsgTypeTyping,
+						Payload: data,
 					}
 				} else {
 					p2.outgoing <- &Message{
-						Type: MsgTypeTyping,
-						Data: msg.Data,
+						Type:    MsgTypeTyping,
+						Payload: msg.Payload,
 					}
 				}
 			case MsgTypeGuess:
 				// Handle guess
 				log.Printf("Player %s guessed", currentPlayer.Nickname)
-				var guessRequest GuessRequest
-				if err := json.Unmarshal(msg.Data, &guessRequest); err != nil {
+				var guessPayload GuessPayload
+				if err := json.Unmarshal(msg.Payload, &guessPayload); err != nil {
 					break
 				}
 				// Validate the word
-				if !wordList.IsValidWord(guessRequest.Word) {
-					log.Printf("Invalid word guessed by %s: %s", currentPlayer.Nickname, guessRequest.Word)
+				if !wordList.IsValidWord(guessPayload.Word) {
+					log.Printf("Invalid word guessed by %s: %s", currentPlayer.Nickname, guessPayload.Word)
 					var invalidWordPayload InvalidWordPayload
 					invalidWordPayload.Player = currentPlayer
-					invalidWordPayload.Word = guessRequest.Word
+					invalidWordPayload.Word = guessPayload.Word
 					data, err := json.Marshal(invalidWordPayload)
 					if err != nil {
 						log.Println("Error during invalid word payload marshalling:", err)
 						return
 					}
 					p1.outgoing <- &Message{
-						Type: MsgTypeInvalidWord,
-						Data: data,
+						Type:    MsgTypeInvalidWord,
+						Payload: data,
 					}
 					p2.outgoing <- &Message{
-						Type: MsgTypeInvalidWord,
-						Data: data,
+						Type:    MsgTypeInvalidWord,
+						Payload: data,
 					}
 					continue
 				}
 				// Process the guess
-				result, _ := g.MakeGuess(guessRequest.Word)
+				result, _ := g.MakeGuess(guessPayload.Word)
 				if g.State == game.Won {
 					winner = currentPlayer
 				}
 				// Send the feedback to both players
-				var feedbackResponse FeedbackResponse
-				feedbackResponse.Round = round
-				feedbackResponse.Feedback = result
-				data, err := json.Marshal(feedbackResponse)
+				var feedbackPayload FeedbackPayload
+				feedbackPayload.Round = round
+				feedbackPayload.Feedback = result
+				data, err := json.Marshal(feedbackPayload)
 				if err != nil {
 					log.Println("Error during feedback marshalling:", err)
 					return
 				}
 				p1.outgoing <- &Message{
-					Type: MsgTypeFeedback,
-					Data: data,
+					Type:    MsgTypeFeedback,
+					Payload: data,
 				}
 				p2.outgoing <- &Message{
-					Type: MsgTypeFeedback,
-					Data: data,
+					Type:    MsgTypeFeedback,
+					Payload: data,
 				}
 				// Swap players
 				round++
@@ -215,12 +215,12 @@ func startGame(p1, p2 *Player) {
 		return
 	}
 	p1.outgoing <- &Message{
-		Type: MsgTypeGameOver,
-		Data: data,
+		Type:    MsgTypeGameOver,
+		Payload: data,
 	}
 	p2.outgoing <- &Message{
-		Type: MsgTypeGameOver,
-		Data: data,
+		Type:    MsgTypeGameOver,
+		Payload: data,
 	}
 	go checkPlayAgain(p1)
 	go checkPlayAgain(p2)
@@ -252,8 +252,8 @@ func matchPlayer() {
 func enqueuePlayer(player *Player) {
 	if data, err := json.Marshal(player); err == nil {
 		player.outgoing <- &Message{
-			Type: MsgTypeMatching,
-			Data: data,
+			Type:    MsgTypeMatching,
+			Payload: data,
 		}
 	}
 
@@ -325,8 +325,8 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	player.outgoing <- &Message{
-		Type: MsgTypePlayerInfo,
-		Data: playerInfoBytes,
+		Type:    MsgTypePlayerInfo,
+		Payload: playerInfoBytes,
 	}
 
 	// Add the new player to the queue

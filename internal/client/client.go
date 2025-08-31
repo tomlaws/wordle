@@ -89,7 +89,6 @@ func handleWrite(client *Client) {
 
 func (c *Client) Stop() {
 	c.conn.Close()
-	log.Println("Disconnected from server.")
 	os.Exit(0)
 }
 
@@ -108,7 +107,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 		case msg := <-c.incoming:
 			switch msg.Type {
 			case server.MsgTypePlayerInfo:
-				if err := json.Unmarshal(msg.Data, &player); err != nil {
+				if err := json.Unmarshal(msg.Payload, &player); err != nil {
 					log.Println("Error during player info payload unmarshalling:", err)
 					return err
 				}
@@ -118,7 +117,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			case server.MsgTypeGameStart:
 				// Handle game start
 				var gameStartPayload server.GameStartPayload
-				if err := json.Unmarshal(msg.Data, &gameStartPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &gameStartPayload); err != nil {
 					log.Println("Error during game start payload unmarshalling:", err)
 					return err
 				}
@@ -134,7 +133,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
 			case server.MsgTypeRoundStart:
 				var roundStartPayload server.RoundStartPayload
-				if err := json.Unmarshal(msg.Data, &roundStartPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &roundStartPayload); err != nil {
 					log.Println("Error during round start payload unmarshalling:", err)
 					return err
 				}
@@ -157,7 +156,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			case server.MsgTypeInvalidWord:
 				//fmt.Fprintln(output, "Invalid word. Please try again.")
 				var invalidWordPayload server.InvalidWordPayload
-				if err := json.Unmarshal(msg.Data, &invalidWordPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &invalidWordPayload); err != nil {
 					log.Println("Error during invalid word payload unmarshalling:", err)
 					return err
 				}
@@ -167,19 +166,19 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					fmt.Fprintf(output, "Opponent guessed an invalid word: %s\n", invalidWordPayload.Word)
 				}
 			case server.MsgTypeFeedback:
-				var feedbackResponse server.FeedbackResponse
-				if err := json.Unmarshal(msg.Data, &feedbackResponse); err != nil {
+				var feedbackPayload server.FeedbackPayload
+				if err := json.Unmarshal(msg.Payload, &feedbackPayload); err != nil {
 					log.Println("Error during feedback payload unmarshalling:", err)
 					return err
 				}
-				if isOddPlayer && feedbackResponse.Round%2 == 0 || !isOddPlayer && feedbackResponse.Round%2 == 1 {
+				if isOddPlayer && feedbackPayload.Round%2 == 0 || !isOddPlayer && feedbackPayload.Round%2 == 1 {
 					fmt.Printf("Opponent guessed: ")
 				} else {
 					fmt.Printf("You guessed: ")
 				}
-				currentRound = feedbackResponse.Round + 1
+				currentRound = feedbackPayload.Round + 1
 				// Display feedback to the user
-				for _, lr := range feedbackResponse.Feedback {
+				for _, lr := range feedbackPayload.Feedback {
 					switch lr.MatchType {
 					case game.Hit:
 						fmt.Fprintf(output, "[%c] ", lr.Letter)
@@ -192,7 +191,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				fmt.Fprintln(output)
 			case server.MsgTypeGameOver:
 				var gameOverPayload server.GameOverPayload
-				if err := json.Unmarshal(msg.Data, &gameOverPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &gameOverPayload); err != nil {
 					log.Println("Error during game over payload unmarshalling:", err)
 					return err
 				}
@@ -212,7 +211,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				return nil
 			case server.MsgTypeGuessTimeout:
 				var guessTimeoutPayload server.GuessTimeoutPayload
-				if err := json.Unmarshal(msg.Data, &guessTimeoutPayload); err != nil {
+				if err := json.Unmarshal(msg.Payload, &guessTimeoutPayload); err != nil {
 					log.Println("Error during guess timeout payload unmarshalling:", err)
 					return err
 				}
@@ -234,36 +233,33 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					continue
 				}
 				// Handle guess word input
-				guessRequest := server.GuessRequest{
+				guessPayload := server.GuessPayload{
 					Word: input.Text,
 				}
-				data, err := json.Marshal(guessRequest)
+				payload, err := json.Marshal(guessPayload)
 				if err != nil {
 					log.Println("Error during guess request marshalling:", err)
 					return err
 				}
 				c.outgoing <- &server.Message{
-					Type: server.MsgTypeGuess,
-					Data: data,
+					Type:    server.MsgTypeGuess,
+					Payload: payload,
 				}
 			case PlayAgain:
 				// Handle play again input
-				playAgainPayload := server.PlayAgainPayload{
-					Confirm: input.Text == "y" || input.Text == "Y",
-				}
-				playAgainPayloadJson, err := json.Marshal(playAgainPayload)
+				confirmed := input.Text == "y" || input.Text == "Y"
+				playAgainPayload, err := json.Marshal(&server.PlayAgainPayload{
+					Confirm: confirmed,
+				})
 				if err != nil {
 					log.Println("Error during play again payload marshalling:", err)
 					return err
 				}
 				c.outgoing <- &server.Message{
-					Type: server.MsgTypePlayAgain,
-					Data: playAgainPayloadJson,
+					Type:    server.MsgTypePlayAgain,
+					Payload: playAgainPayload,
 				}
-				if playAgainPayload.Confirm {
-					continue
-				} else {
-					// Disconnect
+				if !confirmed {
 					fmt.Fprintln(output, "Thanks for playing!")
 					return nil
 				}
