@@ -1,0 +1,51 @@
+# Multiplayer Wordle
+
+A real-time, multiplayer Wordle game built with Go, featuring queue-based matchmaking and a WebSocket protocol.
+
+## Features
+- Multiplayer: Two players compete to guess the same hidden word.
+- Real-time feedback: Both players see each other's guesses and feedback.
+- Queue-based matchmaking: Players are matched automatically for quick games.
+- Turn-based: Players alternate turns, each with a time limit.
+- WebSocket protocol: Efficient, bidirectional communication between client and server.
+- Configurable word list and game settings.
+
+## Getting Started
+
+### Prerequisites
+- Go 1.20 or later
+
+### Installation
+```sh
+git clone https://github.com/tomlaws/wordle.git
+cd wordle
+go mod download
+```
+
+### Running the Server
+```sh
+go run cmd/server/main.go
+```
+
+### Running the Client
+```sh
+go run cmd/client/main.go
+```
+
+## Usage
+- Start the server and client as above.
+- The client will connect to the server, join the matchmaking queue, and start a game when matched.
+- Enter your guesses when prompted. Each guess must be a valid 5-letter word.
+- The first player to guess the word wins. If neither guesses correctly in 12 rounds, the game is a tie.
+
+## Configuration
+- **Word List:** The default word list is located at `assets/words.txt`. You can replace or extend this file.
+- **Ports:** The server listens on port 8080 by default. You can change this in the source code or with environment variables if supported.
+- **Timeouts:** Each player has 60 seconds per turn (configurable in code).
+
+## Design
+See `GAME_DESIGN.md` for full details on architecture, game flow, and design decisions.
+
+## Acknowledgments
+- Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html).
+- Built with Go and the Gorilla WebSocket library.
