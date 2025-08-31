@@ -12,10 +12,11 @@ func main() {
 	// Ask for IP address to connect
 	var ipAddress string
 	for ipAddress == "" {
-		fmt.Print("Enter server IP address: ")
+		fmt.Print("Enter the server address (localhost:8080): ")
 		fmt.Scanln(&ipAddress)
 		if ipAddress == "" {
-			fmt.Println("IP address cannot be empty. Please try again.")
+			fmt.Println("No address entered. Defaulting to localhost:8080")
+			ipAddress = "localhost:8080"
 		}
 	}
 
