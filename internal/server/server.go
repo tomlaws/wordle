@@ -172,6 +172,7 @@ func startGame(p1, p2 *Player) {
 				}
 				// Send the feedback to both players
 				var feedbackPayload FeedbackPayload
+				feedbackPayload.Player = currentPlayer
 				feedbackPayload.Round = round
 				feedbackPayload.Feedback = result
 				data, err := json.Marshal(feedbackPayload)

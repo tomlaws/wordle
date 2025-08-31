@@ -98,7 +98,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 	go handleRead(c)
 	go handleWrite(c)
 	var err error
-	var player server.Player
+	var me server.Player
 	var maxAttempts int
 	var currentRound int
 	var isOddPlayer bool
@@ -107,11 +107,11 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 		case msg := <-c.incoming:
 			switch msg.Type {
 			case server.MsgTypePlayerInfo:
-				if err := json.Unmarshal(msg.Payload, &player); err != nil {
+				if err := json.Unmarshal(msg.Payload, &me); err != nil {
 					log.Println("Error during player info payload unmarshalling:", err)
 					return err
 				}
-				fmt.Fprintf(output, "Welcome to Wordle, %s!\n", player.Nickname)
+				fmt.Fprintf(output, "Welcome to Wordle, %s!\n", me.Nickname)
 			case server.MsgTypeMatching:
 				fmt.Fprintf(output, "Finding opponent...\n")
 			case server.MsgTypeGameStart:
@@ -122,7 +122,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					return err
 				}
 				maxAttempts = gameStartPayload.MaxAttempts
-				isOddPlayer = gameStartPayload.Player1.ID == player.ID
+				isOddPlayer = gameStartPayload.Player1.ID == me.ID
 				var opponent *server.Player
 				if isOddPlayer {
 					opponent = gameStartPayload.Player2
@@ -141,7 +141,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				currentRound = roundStartPayload.Round
 				timeout := roundStartPayload.Timeout
 				// Handle guess input when it's the player's turn
-				if roundStartPayload.Player.ID == player.ID {
+				if roundStartPayload.Player.ID == me.ID {
 					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
 					if sameRound {
@@ -160,7 +160,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during invalid word payload unmarshalling:", err)
 					return err
 				}
-				if invalidWordPayload.Player.ID == player.ID {
+				if invalidWordPayload.Player.ID == me.ID {
 					fmt.Fprintln(output, "Invalid word. Please try again.")
 				} else {
 					fmt.Fprintf(output, "Opponent guessed an invalid word: %s\n", invalidWordPayload.Word)
@@ -171,10 +171,12 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during feedback payload unmarshalling:", err)
 					return err
 				}
-				if isOddPlayer && feedbackPayload.Round%2 == 0 || !isOddPlayer && feedbackPayload.Round%2 == 1 {
-					fmt.Printf("Opponent guessed: ")
-				} else {
+				player := feedbackPayload.Player
+				if player.ID == player.ID {
+
 					fmt.Printf("You guessed: ")
+				} else {
+					fmt.Printf("Opponent guessed: ")
 				}
 				currentRound = feedbackPayload.Round + 1
 				// Display feedback to the user
@@ -197,7 +199,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				}
 				if gameOverPayload.Winner == nil {
 					fmt.Fprintln(output, "It's a draw! The correct word was:", gameOverPayload.Answer)
-				} else if gameOverPayload.Winner.ID == player.ID {
+				} else if gameOverPayload.Winner.ID == me.ID {
 					fmt.Fprintln(output, "Congratulations! You've won!")
 				} else {
 					fmt.Fprintln(output, "You've lost! The correct word was:", gameOverPayload.Answer)
@@ -215,7 +217,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during guess timeout payload unmarshalling:", err)
 					return err
 				}
-				if guessTimeoutPayload.Player.ID == player.ID {
+				if guessTimeoutPayload.Player.ID == me.ID {
 					fmt.Fprintln(output, "Your turn has timed out.")
 				} else {
 					fmt.Fprintf(output, "Player %s's turn has timed out.\n", guessTimeoutPayload.Player.Nickname)

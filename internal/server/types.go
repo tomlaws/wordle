@@ -56,8 +56,9 @@ type GuessPayload struct {
 }
 
 type FeedbackPayload struct {
-	Feedback []game.LetterResult `json:"feedback"`
+	Player   *Player             `json:"player"`
 	Round    int                 `json:"round"`
+	Feedback []game.LetterResult `json:"feedback"`
 }
 
 type GameOverPayload struct {
