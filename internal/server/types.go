@@ -42,6 +42,11 @@ type RoundStartPayload struct {
 	Timeout int     `json:"timeout"` // seconds
 }
 
+type InvalidWordPayload struct {
+	Player *Player `json:"player"`
+	Word   string  `json:"word"`
+}
+
 type TypingPayload struct {
 	Word string `json:"word"`
 }

@@ -138,13 +138,16 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during round start payload unmarshalling:", err)
 					return err
 				}
+				sameRound := roundStartPayload.Round == currentRound
 				currentRound = roundStartPayload.Round
 				timeout := roundStartPayload.Timeout
 				// Handle guess input when it's the player's turn
 				if roundStartPayload.Player.ID == player.ID {
 					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
-					fmt.Fprintln(output, "You have", timeout, "seconds to make your guess.")
+					if sameRound {
+						fmt.Fprintln(output, "You have", timeout, "seconds to make your guess.")
+					}
 					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxAttempts)
 				} else {
 					// Wait for opponent's guess
@@ -152,7 +155,17 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					fmt.Fprintln(output, "Waiting for opponent's guess...")
 				}
 			case server.MsgTypeInvalidWord:
-				fmt.Fprintln(output, "Invalid word. Please try again.")
+				//fmt.Fprintln(output, "Invalid word. Please try again.")
+				var invalidWordPayload server.InvalidWordPayload
+				if err := json.Unmarshal(msg.Data, &invalidWordPayload); err != nil {
+					log.Println("Error during invalid word payload unmarshalling:", err)
+					return err
+				}
+				if invalidWordPayload.Player.ID == player.ID {
+					fmt.Fprintln(output, "Invalid word. Please try again.")
+				} else {
+					fmt.Fprintf(output, "Opponent guessed an invalid word: %s\n", invalidWordPayload.Word)
+				}
 			case server.MsgTypeFeedback:
 				var feedbackResponse server.FeedbackResponse
 				if err := json.Unmarshal(msg.Data, &feedbackResponse); err != nil {

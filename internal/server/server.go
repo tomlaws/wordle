@@ -60,7 +60,6 @@ func startGame(p1, p2 *Player) {
 		Type: MsgTypeGameStart,
 		Data: gameStartPayloadBytes,
 	}
-
 	currentPlayer := gameStartPayload.Player1
 	g := game.NewGame(wordList.RandomWord(), 12)
 	log.Printf("Game started with answer: %s", g.Answer)
@@ -144,6 +143,27 @@ func startGame(p1, p2 *Player) {
 				var guessRequest GuessRequest
 				if err := json.Unmarshal(msg.Data, &guessRequest); err != nil {
 					break
+				}
+				// Validate the word
+				if !wordList.IsValidWord(guessRequest.Word) {
+					log.Printf("Invalid word guessed by %s: %s", currentPlayer.Nickname, guessRequest.Word)
+					var invalidWordPayload InvalidWordPayload
+					invalidWordPayload.Player = currentPlayer
+					invalidWordPayload.Word = guessRequest.Word
+					data, err := json.Marshal(invalidWordPayload)
+					if err != nil {
+						log.Println("Error during invalid word payload marshalling:", err)
+						return
+					}
+					p1.outgoing <- &Message{
+						Type: MsgTypeInvalidWord,
+						Data: data,
+					}
+					p2.outgoing <- &Message{
+						Type: MsgTypeInvalidWord,
+						Data: data,
+					}
+					continue
 				}
 				// Process the guess
 				result, _ := g.MakeGuess(guessRequest.Word)
