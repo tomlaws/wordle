@@ -26,8 +26,8 @@ const (
 )
 
 type Message struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 type GameStartPayload struct {
@@ -51,15 +51,11 @@ type TypingPayload struct {
 	Word string `json:"word"`
 }
 
-type GuessRequest struct {
+type GuessPayload struct {
 	Word string `json:"word"`
 }
 
-type InvalidWordResponse struct {
-	Word string `json:"word"`
-}
-
-type FeedbackResponse struct {
+type FeedbackPayload struct {
 	Feedback []game.LetterResult `json:"feedback"`
 	Round    int                 `json:"round"`
 }
