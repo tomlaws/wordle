@@ -25,6 +25,9 @@ func main() {
 	if tg, err := strconv.Atoi(ThinkTime); err == nil {
 		thinkTimeInt = tg
 	}
+	if thinkTimeInt < 1 {
+		log.Fatal("Invalid think time. Must be >= 1.")
+	}
 
 	http.HandleFunc("/socket", server.Init(WordListPath, maxGuessesInt, thinkTimeInt))
 	log.Printf("Server starting on %s", ":8080")
