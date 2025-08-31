@@ -28,8 +28,13 @@ go run cmd/server/main.go
 ```
 or to provide a custom configuration
 ```sh
-go run -ldflags="-X main.MaxGuesses=12 -X main.WordListPath=assets/words.txt" cmd/server/main.go
+go run -ldflags="-X main.Port=8080 -X main.MaxGuesses=12 -X main.WordListPath=assets/words.txt -X main.ThinkTime=60" cmd/server/main.go
 ```
+## Configuration
+- **Port:** The server listens on port 8080 by default.
+- **Max Guesses:** The maximum number of guesses per player is 12 by default.
+- **Word List:** The default word list is located at `assets/words.txt`.
+- **Think Time:** Each player has 60 seconds per turn by default.
 
 ### Running the Client
 ```sh
@@ -44,17 +49,15 @@ or to provide a custom configuration
 ```sh
 go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
 ```
+## Configuration
+- **Max Guesses:** The maximum number of guesses per player is 12 by default.
+- **Word List:** The default word list is located at `assets/words.txt`.
 
 ## Usage
 - Start the server and client as above.
 - The client will connect to the server, join the matchmaking queue, and start a game when matched.
 - Enter your guesses when prompted. Each guess must be a valid 5-letter word.
 - The first player to guess the word wins. If neither guesses correctly in 12 rounds, the game is a tie.
-
-## Configuration
-- **Word List:** The default word list is located at `assets/words.txt`. You can replace or extend this file.
-- **Ports:** The server listens on port 8080 by default. You can change this in the source code or with environment variables if supported.
-- **Timeouts:** Each player has 60 seconds per turn (configurable in code).
 
 ## Design
 See `GAME_DESIGN.md` for full details on architecture, game flow, and design decisions.
