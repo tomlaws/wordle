@@ -10,13 +10,15 @@ import (
 
 const (
 	// Server to Client
-	MsgTypePlayerInfo  = "player_info"
-	MsgTypeMatching    = "matching"
-	MsgTypeGameStart   = "game_start"
-	MsgTypeTurnStart   = "turn_start"
-	MsgTypeInvalidWord = "invalid_word"
-	MsgTypeFeedback    = "feedback"
-	MsgTypeGameOver    = "game_over"
+	MsgTypePlayerInfo       = "player_info"
+	MsgTypeMatching         = "matching"
+	MsgTypeGameStart        = "game_start"
+	MsgTypeTurnStart        = "turn_start"
+	MsgTypeInvalidWord      = "invalid_word"
+	MsgTypeFeedback         = "feedback"
+	MsgTypeGameOver         = "game_over"
+	MsgTypePlayAgainTimeout = "play_again_timeout"
+	MsgTypeGuessTimeout     = "guess_timeout"
 	// Client to Server
 	MsgTypeTyping    = "typing"
 	MsgTypeGuess     = "guess"
