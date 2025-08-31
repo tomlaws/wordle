@@ -55,7 +55,6 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			log.Println("Error during message reading:", err)
 			return err
 		}
-		// log.Printf("Received message: %+v", message)
 		switch message.Type {
 		case server.MsgTypeGameStart:
 			// Handle game start
@@ -69,6 +68,40 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			maxAttempts = gameStartPayload.MaxAttempts
 			isOddPlayer = gameStartPayload.Player1.ID == playerInfoPayload.ID
 			fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
+		case server.MsgTypeTurnStart:
+			var turnStartPayload server.TurnStartPayload
+			if err := json.Unmarshal(message.Data, &turnStartPayload); err != nil {
+				log.Println("Error during turn start payload unmarshalling:", err)
+				return err
+			}
+			// Handle guess input when it's the player's turn
+			if turnStartPayload.Player.ID == playerInfoPayload.ID {
+				fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt, maxAttempts)
+				var guess string
+				if _, err := fmt.Fscan(input, &guess); err != nil {
+					log.Println("Error during input reading:", err)
+					return err
+				}
+				// Send guess to server
+				guessRequest := server.GuessRequest{
+					Word: guess,
+				}
+				data, err := json.Marshal(guessRequest)
+				if err != nil {
+					log.Println("Error during guess request marshalling:", err)
+					return err
+				}
+				if err := c.conn.WriteJSON(server.Message{
+					Type: server.MsgTypeGuess,
+					Data: data,
+				}); err != nil {
+					log.Println("Error during guess message sending:", err)
+					return err
+				}
+			} else {
+				// Wait for opponent's guess
+				log.Println("Waiting for opponent's guess...")
+			}
 		case server.MsgTypeInvalidWord:
 			fmt.Fprintln(output, "Invalid word. Please try again.")
 		case server.MsgTypeFeedback:
@@ -127,7 +160,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				return err
 			}
 			if err := c.conn.WriteJSON(server.Message{
-				Type: server.MsgTypeConfirmPlay,
+				Type: server.MsgTypePlayAgain,
 				Data: confirmPlayPayloadJson,
 			}); err != nil {
 				log.Println("Error during new game request sending:", err)
@@ -139,31 +172,6 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				// Disconnect
 				fmt.Fprintln(output, "Thanks for playing!")
 				return nil
-			}
-		}
-		// Handle guess input when it's the player's turn
-		if isOddPlayer && currentAttempt%2 == 1 || !isOddPlayer && currentAttempt%2 == 0 {
-			fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt, maxAttempts)
-			var guess string
-			if _, err := fmt.Fscan(input, &guess); err != nil {
-				log.Println("Error during input reading:", err)
-				return err
-			}
-			// Send guess to server
-			guessRequest := server.GuessRequest{
-				Word: guess,
-			}
-			data, err := json.Marshal(guessRequest)
-			if err != nil {
-				log.Println("Error during guess request marshalling:", err)
-				return err
-			}
-			if err := c.conn.WriteJSON(server.Message{
-				Type: server.MsgTypeGuess,
-				Data: data,
-			}); err != nil {
-				log.Println("Error during guess message sending:", err)
-				return err
 			}
 		}
 	}
