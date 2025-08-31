@@ -1,5 +1,19 @@
 # Multiplayer Wordle Game Design
 
+## Table of Contents
+1. [Rules](#rules)
+    - [Rule Justification](#rule-justification)
+2. [Matchmaking Mechanism Comparison](#matchmaking-mechanism-comparison)
+3. [Protocol](#protocol)
+    - [Communication Protocol Comparison](#communication-protocol-comparison)
+4. [Concurrency](#concurrency)
+5. [Message Format](#message-format)
+    - [Example Messages](#example-messages)
+6. [Player Authentication](#player-authentication)
+7. [Error Handling](#error-handling)
+
+---
+
 ## Rules
 - Two players compete to guess the same hidden word.
 - The game consists of 12 rounds in total (6 turns per player).
@@ -11,6 +25,8 @@
 
 ### Rule Justification
 The rules are designed for simplicity and fast-paced gameplay. Limiting each player to 6 turns and 60 seconds per guess keeps matches short and engaging, reducing downtime and making the game accessible to new players. Alternating turns and immediate feedback ensure fairness and maintain excitement.
+
+---
 
 ## Matchmaking Mechanism Comparison
 
@@ -25,7 +41,10 @@ The rules are designed for simplicity and fast-paced gameplay. Limiting each pla
 **Design Choice:**  
 Queue-based matchmaking is favored for its simplicity and faster implementation, allowing for efficient player matching without the overhead of room management.
 
+---
+
 ## Protocol
+
 ### Communication Protocol Comparison
 
 | Feature                      | HTTP                         | WebSocket                    | gRPC                         |
@@ -40,10 +59,15 @@ Queue-based matchmaking is favored for its simplicity and faster implementation,
 **Design Choice:**  
 WebSocket is selected for this game because it supports bidirectional communication and is compatible with all modern browsers, making it ideal for real-time multiplayer interactions. 
 
+---
+
 ## Concurrency
+
 The server uses Go's concurrency model by using two goroutines per connected client: one for reading messages from the WebSocket and another for writing messages to it. This allows the server to handle incoming and outgoing communication independently, ensuring that a slow or blocked client does not stall the entire game loop.
 
 The client also uses separate goroutines for handling incoming and outgoing WebSocket messages. This ensures console/UI update and user input do not block each other.
+
+---
 
 ## Message Format
 
@@ -106,13 +130,18 @@ Messages between client and server use JSON over WebSocket. Each message include
 
 This structured format ensures clear, extensible communication for all game events.
 
+---
+
 ## Player Authentication
 
 Players are required to enter a username only when connecting to the game. The server only establishes a connection if a username is provided, ensuring that every player has an identifiable display name. To keep the implementation simple and memory-efficient, the system does not check for duplicate usernames. Instead, each player is assigned a unique UUID upon connection, which allows the client to distinguish between the local player and their opponent, regardless of username duplication.
 
 While this approach simplifies the design and implementation, it also means that player identity can be easily forged by providing any username. Since there is no authentication or duplicate username check, the system should not be used for scenarios where secure or trusted player identification is required.
 
+---
+
 ## Error Handling
+
 - **Validation Errors:**  
     When a client sends an invalid message (e.g., malformed JSON, missing required fields, or invalid guess), the server responds with an explicit error message. This message includes a `type` so the client can display or handle the error gracefully.
 
