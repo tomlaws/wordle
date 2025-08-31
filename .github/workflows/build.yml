@@ -1,0 +1,51 @@
+
+name: Build and Release Client and Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Build (Windows)
+        run: |
+          mkdir -p bin
+          GOOS=windows GOARCH=amd64 go build -o bin/client-windows.exe ./cmd/client/main.go
+
+      - name: Build Server (Windows)
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o bin/server-windows.exe ./cmd/server/main.go
+
+      - name: Build CLI (macOS amd64)
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o bin/client-mac-amd64 ./cmd/client/main.go
+
+      - name: Build Server (macOS amd64)
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o bin/server-mac-amd64 ./cmd/server/main.go
+
+      - name: Build CLI (macOS arm64)
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o bin/client-mac-arm64 ./cmd/client/main.go
+
+      - name: Build Server (macOS arm64)
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o bin/server-mac-arm64 ./cmd/server/main.go
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordle-binaries
+          path: bin/*
+          if-no-files-found: error
