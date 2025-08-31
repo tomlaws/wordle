@@ -79,7 +79,7 @@ func RunGame(input io.Reader, output io.Writer, wordListPath string, maxGuesses 
 }
 
 func main() {
-	maxGuessesInt := 6
+	var maxGuessesInt int
 	if mg, err := strconv.Atoi(MaxGuesses); err == nil {
 		maxGuessesInt = mg
 	}
