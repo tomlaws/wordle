@@ -36,15 +36,27 @@ func New(ipAddress string, nickname string) (*Client, error) {
 	}, nil
 }
 
+func handleInputUnderlying(lines chan interface{}) {
+	s := bufio.NewScanner(os.Stdin)
+	for s.Scan() {
+		lines <- s.Text()
+	}
+	lines <- s.Err()
+}
+
 func handleInput(client *Client) {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		text := scanner.Text()
+	input := make(chan interface{})
+	go handleInputUnderlying(input)
+	var tr *InputTrigger = nil
+	for {
 		select {
 		case trigger := <-client.inputTrigger:
-			client.input <- Input{Category: trigger.Category, Text: text}
-		default:
-			// Ignore input if not triggered
+			tr = &trigger
+		case line := <-input:
+			if tr != nil {
+				client.input <- Input{Category: tr.Category, Text: line.(string)}
+				tr = nil
+			}
 		}
 	}
 }
@@ -89,7 +101,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 	var err error
 	var player server.Player
 	var maxAttempts int
-	var currentAttempt int
+	var currentRound int
 	var isOddPlayer bool
 	for {
 		select {
@@ -110,24 +122,27 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					log.Println("Error during game start payload unmarshalling:", err)
 					return err
 				}
-				// Start the game with the received payload
-				currentAttempt = 1
 				maxAttempts = gameStartPayload.MaxAttempts
 				isOddPlayer = gameStartPayload.Player1.ID == player.ID
 				fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
-			case server.MsgTypeTurnStart:
-				var turnStartPayload server.TurnStartPayload
-				if err := json.Unmarshal(msg.Data, &turnStartPayload); err != nil {
-					log.Println("Error during turn start payload unmarshalling:", err)
+			case server.MsgTypeRoundStart:
+				var roundStartPayload server.RoundStartPayload
+				if err := json.Unmarshal(msg.Data, &roundStartPayload); err != nil {
+					log.Println("Error during round start payload unmarshalling:", err)
 					return err
 				}
+				currentRound = roundStartPayload.Round
+				timeout := roundStartPayload.Timeout
 				// Handle guess input when it's the player's turn
-				if turnStartPayload.Player.ID == player.ID {
-					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt, maxAttempts)
+				if roundStartPayload.Player.ID == player.ID {
+					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
+					fmt.Fprintln(output, "You have", timeout, "seconds to make your guess.")
+					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxAttempts)
 				} else {
 					// Wait for opponent's guess
-					log.Println("Waiting for opponent's guess...")
+					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxAttempts)
+					fmt.Fprintln(output, "Waiting for opponent's guess...")
 				}
 			case server.MsgTypeInvalidWord:
 				fmt.Fprintln(output, "Invalid word. Please try again.")
@@ -142,7 +157,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				} else {
 					fmt.Printf("You guessed: ")
 				}
-				currentAttempt = feedbackResponse.Round + 1
+				currentRound = feedbackResponse.Round + 1
 				// Display feedback to the user
 				for _, lr := range feedbackResponse.Feedback {
 					switch lr.MatchType {
@@ -175,6 +190,17 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 			case server.MsgTypePlayAgainTimeout:
 				fmt.Fprintln(output, "You've been disconnected due to not responding.")
 				return nil
+			case server.MsgTypeGuessTimeout:
+				var guessTimeoutPayload server.GuessTimeoutPayload
+				if err := json.Unmarshal(msg.Data, &guessTimeoutPayload); err != nil {
+					log.Println("Error during guess timeout payload unmarshalling:", err)
+					return err
+				}
+				if guessTimeoutPayload.Player.ID == player.ID {
+					fmt.Fprintln(output, "Your turn has timed out.")
+				} else {
+					fmt.Fprintf(output, "Player %s's turn has timed out.\n", guessTimeoutPayload.Player.Nickname)
+				}
 			}
 		case input := <-c.input:
 			category := input.Category
@@ -183,7 +209,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				// Check if text is 5
 				if len(input.Text) != 5 {
 					fmt.Fprintln(output, "Invalid input. Please enter a 5-letter word.")
-					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentAttempt, maxAttempts)
+					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxAttempts)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
 					continue
 				}
@@ -202,19 +228,19 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				}
 			case PlayAgain:
 				// Handle play again input
-				confirmPlayPayload := server.ConfirmPlayPayload{
+				playAgainPayload := server.PlayAgainPayload{
 					Confirm: input.Text == "y" || input.Text == "Y",
 				}
-				confirmPlayPayloadJson, err := json.Marshal(confirmPlayPayload)
+				playAgainPayloadJson, err := json.Marshal(playAgainPayload)
 				if err != nil {
-					log.Println("Error during confirm play payload marshalling:", err)
+					log.Println("Error during play again payload marshalling:", err)
 					return err
 				}
 				c.outgoing <- &server.Message{
 					Type: server.MsgTypePlayAgain,
-					Data: confirmPlayPayloadJson,
+					Data: playAgainPayloadJson,
 				}
-				if confirmPlayPayload.Confirm {
+				if playAgainPayload.Confirm {
 					continue
 				} else {
 					// Disconnect

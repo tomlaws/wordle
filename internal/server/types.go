@@ -13,7 +13,7 @@ const (
 	MsgTypePlayerInfo       = "player_info"
 	MsgTypeMatching         = "matching"
 	MsgTypeGameStart        = "game_start"
-	MsgTypeTurnStart        = "turn_start"
+	MsgTypeRoundStart       = "round_start"
 	MsgTypeInvalidWord      = "invalid_word"
 	MsgTypeFeedback         = "feedback"
 	MsgTypeGameOver         = "game_over"
@@ -36,8 +36,10 @@ type GameStartPayload struct {
 	Player2     *Player `json:"player2"`
 }
 
-type TurnStartPayload struct {
-	Player *Player `json:"player"`
+type RoundStartPayload struct {
+	Player  *Player `json:"player"`
+	Round   int     `json:"round"`
+	Timeout int     `json:"timeout"` // seconds
 }
 
 type TypingPayload struct {
@@ -62,7 +64,11 @@ type GameOverPayload struct {
 	Answer string  `json:"answer"`
 }
 
-type ConfirmPlayPayload struct {
+type GuessTimeoutPayload struct {
+	Player *Player `json:"player"`
+}
+
+type PlayAgainPayload struct {
 	Confirm bool `json:"confirm"`
 }
 
