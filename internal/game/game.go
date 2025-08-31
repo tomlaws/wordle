@@ -6,12 +6,12 @@ import (
 	"unicode"
 )
 
-func NewGame(answer string, maxAttempts int) *Game {
+func NewGame(answer string, maxGuesses int) *Game {
 	return &Game{
-		Answer:      answer,
-		MaxAttempts: maxAttempts,
-		Attempts:    make([][]LetterResult, 0, maxAttempts),
-		State:       InProgress,
+		Answer:     answer,
+		MaxGuesses: maxGuesses,
+		Attempts:   make([][]LetterResult, 0, maxGuesses),
+		State:      InProgress,
 	}
 }
 
@@ -55,7 +55,7 @@ func (g *Game) MakeGuess(guess string) ([]LetterResult, error) {
 	g.Attempts = append(g.Attempts, result)
 	if strings.EqualFold(guess, g.Answer) {
 		g.State = Won
-	} else if len(g.Attempts) >= g.MaxAttempts {
+	} else if len(g.Attempts) >= g.MaxGuesses {
 		g.State = Lost
 	} else {
 		g.State = InProgress

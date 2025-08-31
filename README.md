@@ -26,10 +26,23 @@ go mod download
 ```sh
 go run cmd/server/main.go
 ```
+or to provide a custom configuration
+```sh
+go run -ldflags="-X main.MaxGuesses=12 -X main.WordListPath=assets/words.txt" cmd/server/main.go
+```
 
 ### Running the Client
 ```sh
 go run cmd/client/main.go
+```
+
+### Running the Standalone
+```sh
+go run cmd/standalone/main.go
+```
+or to provide a custom configuration
+```sh
+go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
 ```
 
 ## Usage

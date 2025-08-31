@@ -31,9 +31,9 @@ type Message struct {
 }
 
 type GameStartPayload struct {
-	MaxAttempts int     `json:"max_attempts"`
-	Player1     *Player `json:"player1"`
-	Player2     *Player `json:"player2"`
+	MaxGuesses int     `json:"max_guesses"`
+	Player1    *Player `json:"player1"`
+	Player2    *Player `json:"player2"`
 }
 
 type RoundStartPayload struct {
