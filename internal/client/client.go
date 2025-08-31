@@ -172,8 +172,7 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 					return err
 				}
 				player := feedbackPayload.Player
-				if player.ID == player.ID {
-
+				if player.ID == me.ID {
 					fmt.Printf("You guessed: ")
 				} else {
 					fmt.Printf("Opponent guessed: ")
