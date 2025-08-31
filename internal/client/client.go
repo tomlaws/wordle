@@ -124,6 +124,13 @@ func (c *Client) Start(input io.Reader, output io.Writer) error {
 				}
 				maxAttempts = gameStartPayload.MaxAttempts
 				isOddPlayer = gameStartPayload.Player1.ID == player.ID
+				var opponent *server.Player
+				if isOddPlayer {
+					opponent = gameStartPayload.Player2
+				} else {
+					opponent = gameStartPayload.Player1
+				}
+				fmt.Fprintf(output, "You are playing against %s\n", opponent.Nickname)
 				fmt.Fprintln(output, "Guess the 5-letter word in", maxAttempts, "attempts.")
 			case server.MsgTypeRoundStart:
 				var roundStartPayload server.RoundStartPayload
