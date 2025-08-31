@@ -38,7 +38,12 @@ Queue-based matchmaking is favored for its simplicity and faster implementation,
 | Ease of Implementation       | Easiest                      | Moderate                     | Most complex                 |
 
 **Design Choice:**  
-WebSocket is selected for this game because it supports bidirectional communication and is compatible with all modern browsers, making it ideal for real-time multiplayer interactions.
+WebSocket is selected for this game because it supports bidirectional communication and is compatible with all modern browsers, making it ideal for real-time multiplayer interactions. 
+
+## Concurrency
+The server uses Go's concurrency model by using two goroutines per connected client: one for reading messages from the WebSocket and another for writing messages to it. This allows the server to handle incoming and outgoing communication independently, ensuring that a slow or blocked client does not stall the entire game loop.
+
+The client also uses separate goroutines for handling incoming and outgoing WebSocket messages. This ensures console/UI update and user input do not block each other.
 
 ## Message Format
 
@@ -65,7 +70,7 @@ Messages between client and server use JSON over WebSocket. Each message include
     "payload": {
         "player": {
             "id": "3d6a2e36-30c0-4812-89a6-39bcb1b6edc2",
-            "nickname": "Tom",
+            "nickname": "Tom"
         },
         "round": 1,
         "feedback": [
@@ -93,10 +98,37 @@ Messages between client and server use JSON over WebSocket. Each message include
                 "letter": "e",
                 "position": 4,
                 "match_type": 2 // 2 indicates correct letter in correct position
-            },
+            }
         ]
     }
 }
 ```
 
 This structured format ensures clear, extensible communication for all game events.
+
+## Player Authentication
+
+Players are required to enter a username only when connecting to the game. The server only establishes a connection if a username is provided, ensuring that every player has an identifiable display name. To keep the implementation simple and memory-efficient, the system does not check for duplicate usernames. Instead, each player is assigned a unique UUID upon connection, which allows the client to distinguish between the local player and their opponent, regardless of username duplication.
+
+While this approach simplifies the design and implementation, it also means that player identity can be easily forged by providing any username. Since there is no authentication or duplicate username check, the system should not be used for scenarios where secure or trusted player identification is required.
+
+## Error Handling
+- **Validation Errors:**  
+    When a client sends an invalid message (e.g., malformed JSON, missing required fields, or invalid guess), the server responds with an explicit error message. This message includes a `type` so the client can display or handle the error gracefully.
+
+    ```json
+    {
+            "type": "invalid_word",
+            "payload": {
+                "player": {
+                    "id": "3d6a2e36-30c0-4812-89a6-39bcb1b6edc2",
+                    "nickname": "Tom",
+                },
+                "word": "aeiou"
+            }
+    }
+    ```
+
+- **Critical Errors:**  
+    For unrecoverable or critical errors, the server closes the WebSocket connection. This approach keeps the implementation simple and avoids complex error recovery logic on the client side.
+
