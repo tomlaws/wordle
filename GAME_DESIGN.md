@@ -57,7 +57,7 @@ Queue-based matchmaking is favored for its simplicity and faster implementation,
 | Ease of Implementation       | Easiest                      | Moderate                     | Most complex                 |
 
 **Design Choice:**  
-WebSocket is selected for this game because it supports bidirectional communication and is compatible with all modern browsers, making it ideal for real-time multiplayer interactions. 
+WebSocket is selected for this game because it supports bidirectional communication and is compatible with all modern browsers, making it ideal for real-time multiplayer interactions and provides extensibility for future enhancements, such as adding a web frontend.
 
 ---
 
