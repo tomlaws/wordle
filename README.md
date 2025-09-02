@@ -60,7 +60,7 @@ or to provide a custom configuration
 go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
 ```
 #### Configuration
-- **Max Guesses:** The maximum number of guesses per player is 12 by default.
+- **Max Guesses:** The maximum number of guesses per game is 12 by default.
 - **Word List:** The default word list is located at `assets/words.txt`.
 
 ## Acknowledgments
