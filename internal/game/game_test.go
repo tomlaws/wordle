@@ -5,17 +5,17 @@ import (
 )
 
 func TestGameInitialization(t *testing.T) {
-	maxAttempts := 6
-	game := NewGame("apple", maxAttempts)
+	maxGuesses := 6
+	game := NewGame("apple", maxGuesses)
 	if game.Answer != "apple" {
 		t.Errorf("Expected answer to be 'apple', got %s", game.Answer)
 	}
-	if game.MaxAttempts != maxAttempts {
-		t.Errorf("Expected max attempts to be %d, got %d", maxAttempts, game.MaxAttempts)
+	if game.MaxGuesses != maxGuesses {
+		t.Errorf("Expected max guesses to be %d, got %d", maxGuesses, game.MaxGuesses)
 	}
 	// Check size of Attempts slice capacity
-	if cap(game.Attempts) != maxAttempts {
-		t.Errorf("Expected attempts capacity to be %d, got %d", maxAttempts, cap(game.Attempts))
+	if cap(game.Attempts) != maxGuesses {
+		t.Errorf("Expected attempts capacity to be %d, got %d", maxGuesses, cap(game.Attempts))
 	}
 	// Check initial state
 	if len(game.Attempts) != 0 {
@@ -94,7 +94,7 @@ func TestMakeGuess_InvalidLength(t *testing.T) {
 	}
 }
 
-func TestMakeGuess_MaxAttempts(t *testing.T) {
+func TestMakeGuess_MaxGuesses(t *testing.T) {
 	game := NewGame("apple", 2)
 	game.MakeGuess("grape")
 	game.MakeGuess("grape")
