@@ -1,31 +1,25 @@
 package client
 
 import (
+	"encoding/json"
+	"net/url"
+
 	"github.com/gorilla/websocket"
-	"github.com/tomlaws/wordle/internal/server"
 )
 
 type Client struct {
-	conn         *websocket.Conn
-	input        chan Input
-	inputTrigger chan InputTrigger
-	incoming     chan *server.Message
-	outgoing     chan *server.Message
-	error        chan error
+	url      url.URL
+	conn     *websocket.Conn
+	incoming chan json.RawMessage
+	outgoing chan json.RawMessage
+	error    chan error
 }
 
-type InputCategory int
-
-const (
-	GuessWord InputCategory = iota
-	PlayAgain
-)
-
-type InputTrigger struct {
-	Category InputCategory
+type Message struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
 }
 
-type Input struct {
-	Category InputCategory
-	Text     string
+type Payload interface {
+	MessageType() string
 }

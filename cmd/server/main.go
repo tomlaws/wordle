@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/tomlaws/wordle/internal/multiplayer"
 	"github.com/tomlaws/wordle/internal/server"
 )
 
@@ -29,8 +30,13 @@ func main() {
 	if thinkTimeInt < 1 {
 		log.Fatal("Invalid think time. Must be >= 1.")
 	}
-
-	http.HandleFunc("/socket", server.Init(WordListPath, maxGuessesInt, thinkTimeInt))
+	lobby := multiplayer.NewLobby(WordListPath, maxGuessesInt, thinkTimeInt)
+	handler := server.NewServer(
+		func(client *server.Client) {
+			lobby.NewPlayer(client)
+		},
+	)
+	http.HandleFunc("/socket", handler)
 	log.Printf("Server starting on %s", ":"+Port)
 	if err := http.ListenAndServe(":"+Port, nil); err != nil {
 		log.Fatal("Error starting server:", err)
