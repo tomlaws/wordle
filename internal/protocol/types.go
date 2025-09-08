@@ -9,8 +9,8 @@ type Protocol struct {
 type MessageType string
 
 type Message struct {
-	Type    MessageType
-	Payload json.RawMessage
+	Type    MessageType     `json:"type"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 type Payload interface {
