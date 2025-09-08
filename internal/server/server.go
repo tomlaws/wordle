@@ -51,7 +51,7 @@ func socketHandler(newClientCallback func(client *Client)) func(w http.ResponseW
 			log.Printf("Player connected with blank nickname")
 			return
 		}
-
+		Upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 		// Upgrade our raw HTTP connection to a websocket based one
 		conn, err := Upgrader.Upgrade(w, r, nil)
 		if err != nil {
