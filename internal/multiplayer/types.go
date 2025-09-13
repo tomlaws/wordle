@@ -12,7 +12,7 @@ type Client interface {
 	Nickname() string
 	Incoming() chan json.RawMessage
 	Outgoing() chan json.RawMessage
-	Err() chan error
+	Error() chan error
 }
 
 type Player struct {
@@ -20,7 +20,7 @@ type Player struct {
 	Nickname string `json:"nickname"`
 	incoming chan protocol.Payload
 	outgoing chan protocol.Payload
-	err      chan error
+	error    chan error
 }
 
 type Lobby struct {
