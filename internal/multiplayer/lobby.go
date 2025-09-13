@@ -32,7 +32,7 @@ func (l *Lobby) NewPlayer(client Client) *Player {
 		Nickname: client.Nickname(),
 		incoming: protocol.UnwrapChannel(client.Incoming()),
 		outgoing: protocol.WrapChannel(client.Outgoing()),
-		err:      client.Err(),
+		error:    client.Error(),
 	}
 	// Welcome
 	player.outgoing <- &PlayerInfoPayload{
@@ -82,10 +82,10 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 		roundTimeout := time.After(timeout)
 
 		select {
-		case p1Err := <-p1.err:
+		case p1Err := <-p1.error:
 			log.Println("Error from player 1:", p1Err)
 			winner = p2
-		case p2Err := <-p2.err:
+		case p2Err := <-p2.error:
 			log.Println("Error from player 2:", p2Err)
 			winner = p1
 		case <-roundTimeout:
@@ -179,10 +179,10 @@ func (l *Lobby) startMatchingPlayer() {
 		go func() {
 			timeout := time.After(2 * time.Second)
 			select {
-			case <-p1.err:
+			case <-p1.error:
 				log.Printf("Player %s has disconnected", p1.Nickname)
 				l.queue <- p2
-			case <-p2.err:
+			case <-p2.error:
 				log.Printf("Player %s has disconnected", p2.Nickname)
 				l.queue <- p1
 			case <-timeout:

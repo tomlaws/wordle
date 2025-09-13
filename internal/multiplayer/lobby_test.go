@@ -14,7 +14,7 @@ type MockClient struct {
 	nickname func() string
 	incoming func() chan json.RawMessage
 	outgoing func() chan json.RawMessage
-	err      func() chan error
+	error    func() chan error
 }
 
 func (m *MockClient) ID() string {
@@ -33,8 +33,8 @@ func (m *MockClient) Outgoing() chan json.RawMessage {
 	return m.outgoing()
 }
 
-func (m *MockClient) Err() chan error {
-	return m.err()
+func (m *MockClient) Error() chan error {
+	return m.error()
 }
 
 func TestLobby_NewPlayer(t *testing.T) {
@@ -45,7 +45,7 @@ func TestLobby_NewPlayer(t *testing.T) {
 		nickname: func() string { return "Player One" },
 		incoming: func() chan json.RawMessage { return make(chan json.RawMessage) },
 		outgoing: func() chan json.RawMessage { return outgoing },
-		err:      func() chan error { return make(chan error) },
+		error:    func() chan error { return make(chan error) },
 	}
 	go func() {
 		lobby.NewPlayer(&mockClient)
@@ -64,5 +64,30 @@ func TestLobby_NewPlayer(t *testing.T) {
 	}
 	if payload.ID != "player1" {
 		t.Errorf("Expected player ID 'player1', got '%s'", payload.ID)
+	}
+}
+
+func TestLobby_RemovePlayer(t *testing.T) {
+	lobby := NewLobby(path.Join(utils.Root, "assets", "words.txt"), 6, 30)
+	outgoing := make(chan json.RawMessage)
+	mockClient := MockClient{
+		id:       func() string { return "player1" },
+		nickname: func() string { return "Player One" },
+		incoming: func() chan json.RawMessage { return make(chan json.RawMessage) },
+		outgoing: func() chan json.RawMessage { return outgoing },
+		error:    func() chan error { return make(chan error) },
+	}
+	go func() {
+		<-mockClient.outgoing()
+	}()
+	player := lobby.NewPlayer(&mockClient)
+	lobby.RemovePlayer(player)
+	_, ok := <-player.outgoing
+	if ok {
+		t.Errorf("Expected player outgoing channel to be closed")
+	}
+	_, ok = <-player.incoming
+	if ok {
+		t.Errorf("Expected player incoming channel to be closed")
 	}
 }
