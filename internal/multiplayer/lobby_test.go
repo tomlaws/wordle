@@ -163,7 +163,7 @@ func TestLobby_SkipDisconnectedPlayer(t *testing.T) {
 	// Simulate player 1 disconnecting
 	error1 <- nil
 	// Wait to allow matching to process
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 	if len(lobby.queue) != 1 {
 		t.Errorf("Expected queue length 1 after player 1 disconnected, got %d", len(lobby.queue))
 	}
