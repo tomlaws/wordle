@@ -174,24 +174,29 @@ func (l *Lobby) checkPlayAgain(player *Player) bool {
 
 func (l *Lobby) startMatchingPlayer() {
 	for {
-		p1 := <-l.queue
-		p2 := <-l.queue
-		go func() {
-			timeout := time.After(2 * time.Second)
-			select {
-			case <-p1.error:
-				log.Printf("Player %s has disconnected", p1.Nickname)
-				l.queue <- p2
-			case <-p2.error:
-				log.Printf("Player %s has disconnected", p2.Nickname)
-				l.queue <- p1
-			case <-timeout:
-				log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
-				l.startGame(p1, p2)
-			}
-		}()
-		// Sleep briefly to avoid busy waiting
-		time.Sleep(100 * time.Millisecond)
+		if len(l.queue) >= 2 {
+			p1 := <-l.queue
+			p2 := <-l.queue
+			go func() {
+				timeout := time.After(2 * time.Second)
+				select {
+				case <-p1.error:
+					log.Printf("Player %s has disconnected", p1.Nickname)
+					l.queue <- p2
+				case <-p2.error:
+					log.Printf("Player %s has disconnected", p2.Nickname)
+					l.queue <- p1
+				case <-timeout:
+					log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
+					l.startGame(p1, p2)
+				}
+			}()
+			// Sleep briefly to avoid busy waiting
+			time.Sleep(100 * time.Millisecond)
+		} else {
+			// Sleep briefly to avoid busy waiting
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 }
 
