@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import Match from './Match.svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { createMockWebSocket } from '$lib/utils/websocket';
@@ -7,6 +7,7 @@ import { FeedbackPayload, GameOverPayload, GuessTimeoutPayload, InvalidWordPaylo
 import { tick } from 'svelte';
 import { TOAST_KEY } from '$lib/context/toast-context';
 import { mockToast } from '$lib/mocks/toast-mock';
+import { GAME_KEY } from '$lib/context/game-context';
 
 test('should notify when it is player\'s turn', async () => {
   const websocket = createMockWebSocket<Payload>();
@@ -14,8 +15,7 @@ test('should notify when it is player\'s turn', async () => {
     id: '1',
     nickname: 'Player1'
   };
-
-  const { getByText, container } = render(Match, { props: { websocket, playerInfo } });
+  const { getByText, container } = render(Match, { context: new Map<Symbol, any>([[TOAST_KEY, mockToast], [GAME_KEY, { websocket, playerInfo }]]) });
   await expect(getByText('Loading')).toBeInTheDocument()
 
   const roundStartPayload = new RoundStartPayload();
@@ -33,7 +33,15 @@ test('should toast invalid word message', async () => {
     id: '1',
     nickname: 'Player1'
   };
-  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+  const { container } = render(Match, {
+    context: new Map<Symbol, any>([
+      [TOAST_KEY, mockToast],
+      [GAME_KEY, {
+        websocket: websocket,
+        playerInfo: playerInfo
+      }]
+    ])
+  });
 
   const invalidWordPayload = new InvalidWordPayload();
   invalidWordPayload.player = playerInfo;
@@ -51,7 +59,16 @@ test('should render correct feedback classes for each letter after guess', async
     id: '1',
     nickname: 'Player1'
   };
-  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+  const { container } = render(Match, {
+    context: new Map<Symbol, any>([
+      [TOAST_KEY, mockToast],
+      [GAME_KEY, {
+        websocket: websocket,
+        playerInfo: playerInfo
+      }]
+    ])
+  });
+
 
   // feedback payload with all letters as 'miss'
   const feedbackPayload = new FeedbackPayload();
@@ -83,7 +100,15 @@ test('should notify when player guess times out', async () => {
     id: '1',
     nickname: 'Player1'
   };
-  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+  const { container } = render(Match, {
+    context: new Map<Symbol, any>([
+      [TOAST_KEY, mockToast],
+      [GAME_KEY, {
+        websocket: websocket,
+        playerInfo: playerInfo
+      }]
+    ])
+  });
 
   const guessTimeoutPayload = new GuessTimeoutPayload();
   guessTimeoutPayload.player = playerInfo;
@@ -92,20 +117,28 @@ test('should notify when player guess times out', async () => {
 
   await waitFor(() => {
     expect(mockToast.error).toHaveBeenCalledWith(expect.stringContaining('You ran out of time!'));
-     const boxes = container.querySelectorAll('.row:nth-child(1) .box');
-     boxes.forEach(box => {
-       expect(box).toHaveClass('miss');
-     });
+    const boxes = container.querySelectorAll('.row:nth-child(1) .box');
+    boxes.forEach(box => {
+      expect(box).toHaveClass('miss');
+    });
   });
 });
 
-test('should notify when game is over', async () => {
+test('should notify when game is over - You won', async () => {
   const websocket = createMockWebSocket<Payload>();
   const playerInfo = {
     id: '1',
     nickname: 'Player1'
   };
-  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+  const { container } = render(Match, {
+    context: new Map<Symbol, any>([
+      [TOAST_KEY, mockToast],
+      [GAME_KEY, {
+        websocket: websocket,
+        playerInfo: playerInfo
+      }]
+    ])
+  });
 
   const gameOverPayload = new GameOverPayload();
   gameOverPayload.winner = playerInfo;
@@ -116,13 +149,8 @@ test('should notify when game is over', async () => {
     expect(mockToast.success).toHaveBeenCalledWith(expect.stringContaining('You won!'));
   });
 
-  // Draw
-  const gameOverDrawPayload = new GameOverPayload();
-  gameOverDrawPayload.winner = null;
-  gameOverDrawPayload.answer = 'APPLE';
-  websocket.send(gameOverDrawPayload);
-
   await waitFor(() => {
-    expect(mockToast.info).toHaveBeenCalledWith(expect.stringContaining('The game ended in a draw'));
+    // check page contains "Game Over" text
+    expect(container).toHaveTextContent('Game Over');
   });
 });

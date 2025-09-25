@@ -17,6 +17,22 @@ export class PlayerInfoPayload extends BasePayload<PlayerInfoPayload> {
     }
 }
 
+export class MatchingPayload extends BasePayload<MatchingPayload> {
+    MessageType(): string {
+        return 'matching';
+    }
+}
+
+export class GameStartPayload extends BasePayload<GameStartPayload> {
+    maxGuesses!: number;
+    player1!: { id: string; nickname: string; };
+    player2!: { id: string; nickname: string; };
+
+    MessageType(): string {
+        return 'game_start';
+    }
+}
+
 export class GuessPayload extends BasePayload<GuessPayload> {
     guess!: string;
 
@@ -73,5 +89,13 @@ export class GameOverPayload extends BasePayload<GameOverPayload> {
 
     MessageType(): string {
         return 'game_over';
+    }
+}
+
+export class PlayAgainPayload extends BasePayload<PlayAgainPayload> {
+    confirm!: boolean;
+
+    MessageType(): string {
+        return 'play_again';
     }
 }

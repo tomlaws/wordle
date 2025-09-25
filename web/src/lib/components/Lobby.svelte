@@ -1,9 +1,14 @@
-<script>
-	export let nickname = '';
+<script lang="ts">
+	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
+	import { getContext } from "svelte";
+
 	export let message = 'Finding opponents...';
+
+	const { playerInfo } = getContext<GameContext>(GAME_KEY);
 </script>
+
 <div class="flex flex-col items-center justify-center min-h-screen text-[1.2rem] text-[#333]">
-    <p class="mb-4">Welcome to Wordle, {nickname}!</p>
+    <p class="mb-4">Welcome to Wordle, {playerInfo.nickname}!</p>
     <div class="spinner mb-4"></div>
     <p>{message}</p>
 </div>
