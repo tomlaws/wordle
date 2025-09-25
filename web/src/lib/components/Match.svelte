@@ -3,6 +3,7 @@
 	import {
 		FeedbackPayload,
 		GuessPayload,
+		GuessTimeoutPayload,
 		InvalidWordPayload,
 		RoundStartPayload
 	} from '$lib/types/payload';
@@ -72,6 +73,20 @@
 			msg.feedback.forEach((item) => {
 				guesses[msg.round - 1][item.position] = item;
 			});
+		}
+		if (msg instanceof GuessTimeoutPayload) {
+			loading = false;
+			console.log('Guess timeout', msg);
+			if (msg.player.id === playerInfo.id) {
+				toast.error('You ran out of time!');
+			} else {
+				toast.info(`${msg.player.nickname} ran out of time.`);
+			}
+			guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
+				position: i,
+				letter: '-',
+				matchType: 0
+			}));
 		}
 	});
 </script>
