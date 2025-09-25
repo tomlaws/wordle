@@ -46,6 +46,7 @@ export class InvalidWordPayload {
 
 export class FeedbackPayload {
     player!: { id: string; nickname: string; };
+    round!: number;
     feedback!: Array<{
         letter: string;
         position: number;
