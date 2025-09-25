@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import { TOAST_KEY, type ToastAPI } from '$lib/context/toast-context';
 	import {
 		FeedbackPayload,
@@ -6,30 +7,27 @@
 		GuessPayload,
 		GuessTimeoutPayload,
 		InvalidWordPayload,
+		PlayAgainPayload,
 		RoundStartPayload
 	} from '$lib/types/payload';
-	import type { Payload } from '$lib/utils/message';
-	import type { WebSocketConnection } from '$lib/utils/websocket';
 	import { getContext } from 'svelte';
 
+	// State for guesses and current input
 	let {
-		websocket,
-		playerInfo,
 		rounds = 12
 	}: {
-		websocket: WebSocketConnection<Payload>;
-		playerInfo: { id: string; nickname: string };
 		rounds?: number;
 	} = $props();
-	// State for guesses and current input
+	let { websocket, playerInfo } = getContext<GameContext>(GAME_KEY);
 	let myTurn = $state<boolean | null>(null);
 	let loading = $state(false);
+	let gameOver = $state<GameOverPayload | null>(null);
 	let guesses = $state<Array<FeedbackPayload['feedback']>>(
 		Array.from({ length: rounds }, () => Array(5).fill(null))
 	);
 	let currentRound = $state(0);
 	let currentGuess = $state(Array(5).fill(''));
-	
+
 	const keyboardRows = [
 		['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
 		['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -54,9 +52,16 @@
 			if (idx !== -1) currentGuess[idx] = key;
 		}
 	}
+	function playAgain(confirm: boolean) {
+		if (confirm) {
+			websocket.send(new PlayAgainPayload({ confirm: true }));
+		} else {
+			location.reload();
+		}
+	}
 	websocket.messages$.subscribe((msg) => {
+		console.log('Received message', msg);
 		if (msg instanceof RoundStartPayload) {
-			console.log('Round started', msg);
 			myTurn = msg.player.id === playerInfo.id;
 			if (myTurn) {
 				currentRound = msg.round;
@@ -64,13 +69,11 @@
 			}
 		}
 		if (msg instanceof InvalidWordPayload) {
-			console.log('Invalid word', msg);
 			//loading = false;
 			toast.error('Invalid word, try again.');
 		}
 		if (msg instanceof GuessTimeoutPayload) {
 			loading = false;
-			console.log('Guess timeout', msg);
 			if (msg.player.id === playerInfo.id) {
 				toast.error('You ran out of time!');
 			} else {
@@ -84,14 +87,12 @@
 		}
 		if (msg instanceof FeedbackPayload) {
 			loading = false;
-			console.log('Feedback received', msg);
 			msg.feedback.forEach((item) => {
 				guesses[msg.round - 1][item.position] = item;
 			});
 		}
 		if (msg instanceof GameOverPayload) {
-			console.log('Game over', msg);
-			myTurn = false;
+			gameOver = msg;
 			toast.info(`Game over! The word was ${msg.answer}.`);
 			if (msg.winner) {
 				if (msg.winner.id === playerInfo.id) {
@@ -106,32 +107,54 @@
 	});
 </script>
 
-<h2>{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}</h2>
-<div class="board">
-	{#each guesses as guess, i}
-		<div class="row">
-			{#each guess as letter, j}
-				<div
-					class="box {letter?.matchType == 0 ? 'miss' : letter?.matchType == 1 ? 'present' : letter?.matchType == 2 ? 'hit' : ''}"
-				>
-					{i === currentRound ? currentGuess[j] : letter?.letter ?? ''}
-				</div>
-			{/each}
-		</div>
-	{/each}
-</div>
+{#if gameOver}
+	<h2>Game Over</h2>
+	<p>The word was {gameOver.answer}.</p>
+	{#if gameOver.winner}
+		{#if gameOver.winner.id === playerInfo.id}
+			<p>Congratulations, you won!</p>
+		{:else}
+			<p>{gameOver.winner.nickname} won the game.</p>
+		{/if}
+	{:else}
+		<p>The game ended in a draw.</p>
+	{/if}
+	<button onclick={() => playAgain(true)}>Play Again</button>
+	<button onclick={() => playAgain(false)}>Quit</button>
+{:else}
+	<h2>{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}</h2>
+	<div class="board">
+		{#each guesses as guess, i}
+			<div class="row">
+				{#each guess as letter, j}
+					<div
+						class="box {letter?.matchType == 0
+							? 'miss'
+							: letter?.matchType == 1
+								? 'present'
+								: letter?.matchType == 2
+									? 'hit'
+									: ''}"
+					>
+						{i === currentRound ? currentGuess[j] : (letter?.letter ?? '')}
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
 
-<div class="keyboard">
-	{#each keyboardRows as row}
-		<div class="key-row">
-			{#each row as key}
-				<button class="key" disabled={!myTurn || loading} onclick={() => handleKey(key)}
-					>{key}</button
-				>
-			{/each}
-		</div>
-	{/each}
-</div>
+	<div class="keyboard">
+		{#each keyboardRows as row}
+			<div class="key-row">
+				{#each row as key}
+					<button class="key" disabled={!myTurn || loading} onclick={() => handleKey(key)}
+						>{key}</button
+					>
+				{/each}
+			</div>
+		{/each}
+	</div>
+{/if}
 
 <style>
 	.board {

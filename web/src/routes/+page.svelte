@@ -5,16 +5,16 @@
 	import { Protocol, type Message, type Payload } from '$lib/utils/message';
 	import { payloadRegistry } from './payload-registry';
 	import { createWebSocket, type WebSocketConnection } from '$lib/utils/websocket';
-	import { PlayerInfoPayload } from '$lib/types/payload';
+	import { GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
+	import { setContext } from 'svelte';
+	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
+	import Lobby from '$lib/components/Lobby.svelte';
 	let nickname = '';
-	let entered = false;
+	let authenticated = false;
 	let websocket: WebSocketConnection<Payload>;
-	let playerInfo: { id: string; nickname: string } | null = null;
+	let matching = false;
 
 	function enterGame() {
-		if (nickname.trim()) {
-			entered = true;
-		}
 		const protocol = new Protocol(payloadRegistry);
 		if (!websocket) {
 			websocket = createWebSocket(
@@ -23,19 +23,29 @@
 				(msg: Message) => protocol.parseMessage(msg)
 			);
 		}
-		// wait for player info from server
-		websocket.messages$
-			.pipe(
-				filter((msg) => msg instanceof PlayerInfoPayload),
-				first(),
-			)
-			.subscribe((payload) => {
-				playerInfo = payload as { id: string; nickname: string };
-			});
+		websocket.messages$.subscribe((msg) => {
+			console.log('Received message in page', msg);
+			if (msg instanceof PlayerInfoPayload) {
+				authenticated = true;
+				setContext(GAME_KEY, {
+					websocket,
+					playerInfo: {
+						id: msg.id,
+						nickname: msg.nickname
+					},
+				} as GameContext);
+			}
+			if (msg instanceof MatchingPayload) {
+				matching = true;
+			}
+			if (msg instanceof GameStartPayload) {
+				matching = false;
+			}
+		});
 	}
 </script>
 
-{#if !playerInfo}
+{#if !authenticated}
 	<div class="mt-0 flex min-h-screen flex-col items-center justify-center gap-4">
 		<label for="nickname" class="text-lg font-semibold">Enter your nickname:</label>
 		<input
@@ -56,6 +66,9 @@
 	</div>
 {:else}
 	<!-- Game UI goes here -->
-	<!-- <Lobby {nickname} /> -->
-	<Match {websocket} {playerInfo} />
+	{#if matching}
+		<Lobby />
+	{:else}
+		<Match />
+	{/if}
 {/if}
