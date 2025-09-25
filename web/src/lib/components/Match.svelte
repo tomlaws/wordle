@@ -22,9 +22,12 @@
 	// State for guesses and current input
 	let myTurn = $state<boolean | null>(null);
 	let loading = $state(false);
-	let guesses = Array(rounds).fill(Array(5).fill(''));
+	let guesses = $state<Array<FeedbackPayload['feedback']>>(
+		Array.from({ length: rounds }, () => Array(5).fill(null))
+	);
 	let currentRound = $state(0);
 	let currentGuess = $state(Array(5).fill(''));
+	
 	const keyboardRows = [
 		['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
 		['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -65,17 +68,23 @@
 		}
 		if (msg instanceof FeedbackPayload) {
 			loading = false;
+			console.log('Feedback received', msg);
+			msg.feedback.forEach((item) => {
+				guesses[msg.round - 1][item.position] = item;
+			});
 		}
 	});
 </script>
 
+<h2>{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}</h2>
 <div class="board">
-	<h2>{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}</h2>
 	{#each guesses as guess, i}
 		<div class="row">
 			{#each guess as letter, j}
-				<div class="box">
-					{i === currentRound ? currentGuess[j] : letter}
+				<div
+					class="box {letter?.matchType == 0 ? 'miss' : letter?.matchType == 1 ? 'present' : letter?.matchType == 2 ? 'hit' : ''}"
+				>
+					{i === currentRound ? currentGuess[j] : letter?.letter ?? ''}
 				</div>
 			{/each}
 		</div>
@@ -114,6 +123,21 @@
 		font-size: 1.5em;
 		background: #fff;
 		text-transform: uppercase;
+	}
+	.box.miss {
+		background: #787c7e;
+		border-color: #787c7e;
+		color: #fff;
+	}
+	.box.present {
+		background: #c9c93e;
+		border-color: #c9c93e;
+		color: #fff;
+	}
+	.box.hit {
+		background: #6aaa64;
+		border-color: #6aaa64;
+		color: #fff;
 	}
 	.keyboard {
 		margin-top: 24px;
