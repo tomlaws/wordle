@@ -2,6 +2,7 @@
 	import { TOAST_KEY, type ToastAPI } from '$lib/context/toast-context';
 	import {
 		FeedbackPayload,
+		GameOverPayload,
 		GuessPayload,
 		GuessTimeoutPayload,
 		InvalidWordPayload,
@@ -67,13 +68,6 @@
 			//loading = false;
 			toast.error('Invalid word, try again.');
 		}
-		if (msg instanceof FeedbackPayload) {
-			loading = false;
-			console.log('Feedback received', msg);
-			msg.feedback.forEach((item) => {
-				guesses[msg.round - 1][item.position] = item;
-			});
-		}
 		if (msg instanceof GuessTimeoutPayload) {
 			loading = false;
 			console.log('Guess timeout', msg);
@@ -87,6 +81,27 @@
 				letter: '-',
 				matchType: 0
 			}));
+		}
+		if (msg instanceof FeedbackPayload) {
+			loading = false;
+			console.log('Feedback received', msg);
+			msg.feedback.forEach((item) => {
+				guesses[msg.round - 1][item.position] = item;
+			});
+		}
+		if (msg instanceof GameOverPayload) {
+			console.log('Game over', msg);
+			myTurn = false;
+			toast.info(`Game over! The word was ${msg.answer}.`);
+			if (msg.winner) {
+				if (msg.winner.id === playerInfo.id) {
+					toast.success('You won!');
+				} else {
+					toast.error(`${msg.winner.nickname} won the game.`);
+				}
+			} else {
+				toast.info('The game ended in a draw.');
+			}
 		}
 	});
 </script>

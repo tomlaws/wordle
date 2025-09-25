@@ -1,4 +1,6 @@
-abstract class BasePayload<T> {
+import type { Payload } from "$lib/utils/message";
+
+abstract class BasePayload<T> implements Payload {
     constructor();
     constructor(init: Partial<T>);
     constructor(init?: Partial<T>) {
@@ -42,6 +44,15 @@ export class InvalidWordPayload extends BasePayload<InvalidWordPayload> {
     }
 }
 
+export class GuessTimeoutPayload extends BasePayload<GuessTimeoutPayload> {
+    player!: { id: string; nickname: string; };
+    round!: number;
+
+    MessageType(): string {
+        return 'guess_timeout';
+    }
+}
+
 export class FeedbackPayload extends BasePayload<FeedbackPayload> {
     player!: { id: string; nickname: string; };
     round!: number;
@@ -56,11 +67,11 @@ export class FeedbackPayload extends BasePayload<FeedbackPayload> {
     }
 }
 
-export class GuessTimeoutPayload extends BasePayload<GuessTimeoutPayload> {
-    player!: { id: string; nickname: string; };
-    round!: number;
+export class GameOverPayload extends BasePayload<GameOverPayload> {
+    winner!: { id: string; nickname: string; } | null;
+    answer!: string;
 
     MessageType(): string {
-        return 'guess_timeout';
+        return 'game_over';
     }
 }

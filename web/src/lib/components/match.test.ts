@@ -3,7 +3,7 @@ import Match from './Match.svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { createMockWebSocket } from '$lib/utils/websocket';
 import type { Payload } from '$lib/utils/message';
-import { FeedbackPayload, GuessTimeoutPayload, InvalidWordPayload, RoundStartPayload } from '$lib/types/payload';
+import { FeedbackPayload, GameOverPayload, GuessTimeoutPayload, InvalidWordPayload, RoundStartPayload } from '$lib/types/payload';
 import { tick } from 'svelte';
 import { TOAST_KEY } from '$lib/context/toast-context';
 import { mockToast } from '$lib/mocks/toast-mock';
@@ -96,5 +96,33 @@ test('should notify when player guess times out', async () => {
      boxes.forEach(box => {
        expect(box).toHaveClass('miss');
      });
+  });
+});
+
+test('should notify when game is over', async () => {
+  const websocket = createMockWebSocket<Payload>();
+  const playerInfo = {
+    id: '1',
+    nickname: 'Player1'
+  };
+  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+
+  const gameOverPayload = new GameOverPayload();
+  gameOverPayload.winner = playerInfo;
+  gameOverPayload.answer = 'APPLE';
+  websocket.send(gameOverPayload);
+
+  await waitFor(() => {
+    expect(mockToast.success).toHaveBeenCalledWith(expect.stringContaining('You won!'));
+  });
+
+  // Draw
+  const gameOverDrawPayload = new GameOverPayload();
+  gameOverDrawPayload.winner = null;
+  gameOverDrawPayload.answer = 'APPLE';
+  websocket.send(gameOverDrawPayload);
+
+  await waitFor(() => {
+    expect(mockToast.info).toHaveBeenCalledWith(expect.stringContaining('The game ended in a draw'));
   });
 });
