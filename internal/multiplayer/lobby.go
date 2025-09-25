@@ -93,6 +93,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 			// Send timeout message
 			var guessTimeoutPayload GuessTimeoutPayload
 			guessTimeoutPayload.Player = currentPlayer
+			guessTimeoutPayload.Round = round
 			p1.outgoing <- &guessTimeoutPayload
 			p2.outgoing <- &guessTimeoutPayload
 			// Swap players

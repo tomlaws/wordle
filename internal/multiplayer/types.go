@@ -109,6 +109,7 @@ func (p *InvalidWordPayload) MessageType() protocol.MessageType {
 
 type GuessTimeoutPayload struct {
 	Player *Player `json:"player"`
+	Round  int     `json:"round"`
 }
 
 func (p *GuessTimeoutPayload) MessageType() protocol.MessageType {

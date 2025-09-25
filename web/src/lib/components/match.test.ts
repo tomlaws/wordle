@@ -3,7 +3,7 @@ import Match from './Match.svelte';
 import { render, waitFor } from '@testing-library/svelte';
 import { createMockWebSocket } from '$lib/utils/websocket';
 import type { Payload } from '$lib/utils/message';
-import { FeedbackPayload, InvalidWordPayload, RoundStartPayload } from '$lib/types/payload';
+import { FeedbackPayload, GuessTimeoutPayload, InvalidWordPayload, RoundStartPayload } from '$lib/types/payload';
 import { tick } from 'svelte';
 import { TOAST_KEY } from '$lib/context/toast-context';
 import { mockToast } from '$lib/mocks/toast-mock';
@@ -74,5 +74,27 @@ test('should render correct feedback classes for each letter after guess', async
     expect(boxes[2]).toHaveClass('hit');
     expect(boxes[3]).toHaveClass('miss');
     expect(boxes[4]).toHaveClass('present');
+  });
+});
+
+test('should notify when player guess times out', async () => {
+  const websocket = createMockWebSocket<Payload>();
+  const playerInfo = {
+    id: '1',
+    nickname: 'Player1'
+  };
+  const { container } = render(Match, { props: { websocket, playerInfo }, context: new Map([[TOAST_KEY, mockToast]]) });
+
+  const guessTimeoutPayload = new GuessTimeoutPayload();
+  guessTimeoutPayload.player = playerInfo;
+  guessTimeoutPayload.round = 1;
+  websocket.send(guessTimeoutPayload);
+
+  await waitFor(() => {
+    expect(mockToast.error).toHaveBeenCalledWith(expect.stringContaining('You ran out of time!'));
+     const boxes = container.querySelectorAll('.row:nth-child(1) .box');
+     boxes.forEach(box => {
+       expect(box).toHaveClass('miss');
+     });
   });
 });
