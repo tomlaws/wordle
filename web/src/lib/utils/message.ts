@@ -1,6 +1,7 @@
 export interface Payload {
     MessageType(): string;
 }
+
 export interface Message {
     type: string;
     payload?: Payload;
