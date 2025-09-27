@@ -122,6 +122,7 @@
 	});
 </script>
 
+<div class="flex flex-col justify-center items-center h-screen">
 {#if gameOver}
 	<h2>Game Over</h2>
 	<p>The word was {gameOver.answer}.</p>
@@ -137,7 +138,9 @@
 	<button onclick={() => playAgain(true)}>Play Again</button>
 	<button onclick={() => playAgain(false)}>Quit</button>
 {:else}
-	<h2>{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}</h2>
+	<h2 class="text-center h-16 flex items-center justify-center">
+		{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}
+	</h2>
 	<div class="board">
 		{#each guesses as guess, i}
 			<div class="row">
@@ -171,13 +174,17 @@
 		{/each}
 	</div>
 {/if}
+</div>
 
 <style>
 	.board {
 		display: grid;
+		width: 100%;
 		gap: 8px;
 		justify-content: center;
-		margin-top: 32px;
+		margin-bottom: 170px;
+		padding-bottom: 16px;
+		overflow-y: auto;
 	}
 	.row {
 		display: flex;
@@ -210,7 +217,17 @@
 		color: #fff;
 	}
 	.keyboard {
-		margin-top: 24px;
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 170px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background: #FFF;
+		border-top: 1px solid #ccc;
 	}
 	.key-row {
 		display: flex;
