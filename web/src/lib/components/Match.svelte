@@ -10,7 +10,7 @@
 		PlayAgainPayload,
 		RoundStartPayload
 	} from '$lib/types/payload';
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 
 	// State for guesses and current input
 	let {
@@ -25,7 +25,7 @@
 	let guesses = $state<Array<FeedbackPayload['feedback']>>(
 		Array.from({ length: rounds }, () => Array(5).fill(null))
 	);
-	let currentRound = $state(0);
+	let currentRound = $state(-1);
 	let currentGuess = $state(Array(5).fill(''));
 
 	const keyboardRows = [
@@ -36,7 +36,11 @@
 	const toast = getContext<ToastAPI>(TOAST_KEY);
 	function submitGuess() {
 		loading = true;
-		websocket.send(new GuessPayload({ guess: currentGuess.join('') }));
+		console.log(currentGuess.join(''));
+		const guessPayload = new GuessPayload();
+		guessPayload.word = currentGuess.join('');
+		console.log(guessPayload);
+		websocket.send(guessPayload);
 	}
 	function handleKey(key) {
 		if (!myTurn) return;
@@ -54,56 +58,67 @@
 	}
 	function playAgain(confirm: boolean) {
 		if (confirm) {
-			websocket.send(new PlayAgainPayload({ confirm: true }));
+			const playAgainPayload = new PlayAgainPayload();
+			playAgainPayload.confirm = true;
+			websocket.send(playAgainPayload);
 		} else {
 			location.reload();
 		}
 	}
-	websocket.messages$.subscribe((msg) => {
-		console.log('Received message', msg);
-		if (msg instanceof RoundStartPayload) {
-			myTurn = msg.player.id === playerInfo.id;
-			if (myTurn) {
-				currentRound = msg.round;
-				currentGuess = Array(5).fill('');
-			}
-		}
-		if (msg instanceof InvalidWordPayload) {
-			//loading = false;
-			toast.error('Invalid word, try again.');
-		}
-		if (msg instanceof GuessTimeoutPayload) {
-			loading = false;
-			if (msg.player.id === playerInfo.id) {
-				toast.error('You ran out of time!');
-			} else {
-				toast.info(`${msg.player.nickname} ran out of time.`);
-			}
-			guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
-				position: i,
-				letter: '-',
-				matchType: 0
-			}));
-		}
-		if (msg instanceof FeedbackPayload) {
-			loading = false;
-			msg.feedback.forEach((item) => {
-				guesses[msg.round - 1][item.position] = item;
-			});
-		}
-		if (msg instanceof GameOverPayload) {
-			gameOver = msg;
-			toast.info(`Game over! The word was ${msg.answer}.`);
-			if (msg.winner) {
-				if (msg.winner.id === playerInfo.id) {
-					toast.success('You won!');
-				} else {
-					toast.error(`${msg.winner.nickname} won the game.`);
+	onMount(() => {
+		websocket.messages$.subscribe((msg) => {
+			if (msg instanceof RoundStartPayload) {
+				myTurn = msg.player.id === playerInfo.id;
+				if (myTurn) {
+					currentRound = msg.round;
+					currentGuess = Array(5).fill('');
 				}
-			} else {
-				toast.info('The game ended in a draw.');
 			}
-		}
+			if (msg instanceof InvalidWordPayload) {
+				console.log('Invalid word received', msg);
+				if (msg.round === currentRound) {
+					if (msg.player.id === playerInfo.id) {
+						loading = false;
+						currentGuess = Array(5).fill('');
+						toast.info(`${msg.word} is not a valid word.`);
+					} else {
+						toast.info(`${msg.player.nickname} guessed an invalid word ${msg.word}.`);
+					}
+				}
+			}
+			if (msg instanceof GuessTimeoutPayload) {
+				loading = false;
+				if (msg.player.id === playerInfo.id) {
+					toast.error('You ran out of time!');
+				} else {
+					toast.info(`${msg.player.nickname} ran out of time.`);
+				}
+				guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
+					position: i,
+					letter: '-'.charCodeAt(0),
+					matchType: 0
+				}));
+			}
+			if (msg instanceof FeedbackPayload) {
+				loading = false;
+				msg.feedback.forEach((item) => {
+					guesses[msg.round - 1][item.position] = item;
+				});
+			}
+			if (msg instanceof GameOverPayload) {
+				gameOver = msg;
+				toast.info(`Game over! The word was ${msg.answer}.`);
+				if (msg.winner) {
+					if (msg.winner.id === playerInfo.id) {
+						toast.success('You won!');
+					} else {
+						toast.error(`${msg.winner.nickname} won the game.`);
+					}
+				} else {
+					toast.info('The game ended in a draw.');
+				}
+			}
+		});
 	});
 </script>
 
@@ -128,15 +143,16 @@
 			<div class="row">
 				{#each guess as letter, j}
 					<div
-						class="box {letter?.matchType == 0
-							? 'miss'
-							: letter?.matchType == 1
-								? 'present'
-								: letter?.matchType == 2
-									? 'hit'
-									: ''}"
+						class="box"
+						class:miss={letter?.matchType === 0}
+						class:present={letter?.matchType === 1}
+						class:hit={letter?.matchType === 2}
 					>
-						{i === currentRound ? currentGuess[j] : (letter?.letter ?? '')}
+						{i === currentRound - 1
+							? currentGuess[j]
+							: letter?.letter
+								? String.fromCharCode(letter.letter)
+								: ''}
 					</div>
 				{/each}
 			</div>
@@ -161,6 +177,7 @@
 		display: grid;
 		gap: 8px;
 		justify-content: center;
+		margin-top: 32px;
 	}
 	.row {
 		display: flex;

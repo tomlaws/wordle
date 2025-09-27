@@ -1,29 +1,22 @@
 import type { Payload } from "$lib/utils/message";
 
-abstract class BasePayload<T> implements Payload {
-    constructor();
-    constructor(init: Partial<T>);
-    constructor(init?: Partial<T>) {
-        Object.assign(this, init);
-    }
-    abstract MessageType(): string;
-}
 
-export class PlayerInfoPayload extends BasePayload<PlayerInfoPayload> {
+export class PlayerInfoPayload {
     id!: string;
     nickname!: string;
+    
     MessageType(): string {
         return 'player_info';
     }
 }
 
-export class MatchingPayload extends BasePayload<MatchingPayload> {
+export class MatchingPayload{
     MessageType(): string {
         return 'matching';
     }
 }
 
-export class GameStartPayload extends BasePayload<GameStartPayload> {
+export class GameStartPayload {
     maxGuesses!: number;
     player1!: { id: string; nickname: string; };
     player2!: { id: string; nickname: string; };
@@ -33,15 +26,15 @@ export class GameStartPayload extends BasePayload<GameStartPayload> {
     }
 }
 
-export class GuessPayload extends BasePayload<GuessPayload> {
-    guess!: string;
+export class GuessPayload {
+    word!: string;
 
     MessageType(): string {
         return 'guess';
     }
 }
 
-export class RoundStartPayload extends BasePayload<RoundStartPayload> {
+export class RoundStartPayload {
     player!: { id: string; nickname: string; };
     round!: number;
     timeout!: number;
@@ -51,8 +44,9 @@ export class RoundStartPayload extends BasePayload<RoundStartPayload> {
     }
 }
 
-export class InvalidWordPayload extends BasePayload<InvalidWordPayload> {
+export class InvalidWordPayload {
     player!: { id: string; nickname: string; };
+    round!: number;
     word!: string;
 
     MessageType(): string {
@@ -60,7 +54,7 @@ export class InvalidWordPayload extends BasePayload<InvalidWordPayload> {
     }
 }
 
-export class GuessTimeoutPayload extends BasePayload<GuessTimeoutPayload> {
+export class GuessTimeoutPayload {
     player!: { id: string; nickname: string; };
     round!: number;
 
@@ -69,11 +63,11 @@ export class GuessTimeoutPayload extends BasePayload<GuessTimeoutPayload> {
     }
 }
 
-export class FeedbackPayload extends BasePayload<FeedbackPayload> {
+export class FeedbackPayload {
     player!: { id: string; nickname: string; };
     round!: number;
     feedback!: Array<{
-        letter: string;
+        letter: number;
         position: number;
         matchType: number;
     }>;
@@ -83,7 +77,7 @@ export class FeedbackPayload extends BasePayload<FeedbackPayload> {
     }
 }
 
-export class GameOverPayload extends BasePayload<GameOverPayload> {
+export class GameOverPayload {
     winner!: { id: string; nickname: string; } | null;
     answer!: string;
 
@@ -92,7 +86,7 @@ export class GameOverPayload extends BasePayload<GameOverPayload> {
     }
 }
 
-export class PlayAgainPayload extends BasePayload<PlayAgainPayload> {
+export class PlayAgainPayload {
     confirm!: boolean;
 
     MessageType(): string {
