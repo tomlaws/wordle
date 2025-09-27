@@ -1,3 +1,5 @@
+import * as changeKeys from "change-case/keys";
+
 export interface Payload {
     MessageType(): string;
 }
@@ -15,15 +17,15 @@ export class Protocol {
         this.payloadRegistry = registerPayloads;
     }
 
-    createMessage(payload: Payload): Message {
+    createMessage(payload: Payload): Message | Object {
         return {
             type: payload.MessageType(),
-            payload
+            payload: changeKeys.snakeCase(payload, 5)
         };
     }
 
     parseMessage(data: Message | Object): Payload {
-        console.log('Parsing message:', data);
+        // console.log('Parsing message:', data);
         if (typeof data !== 'object' || data === null || !('type' in data)) {
             throw new Error(`Invalid message format`);
         }
@@ -31,6 +33,6 @@ export class Protocol {
         if (!PayloadClass) {
             throw new Error(`Unknown message type: ${data.type}`);
         }
-        return Object.assign(PayloadClass(), data.payload);
+        return Object.assign(PayloadClass(), changeKeys.camelCase(data.payload, 5));
     }
 }

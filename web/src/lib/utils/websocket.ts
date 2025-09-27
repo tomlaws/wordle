@@ -1,4 +1,4 @@
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { webSocket } from 'rxjs/webSocket';
 import { Observable, Subscriber } from 'rxjs';
 
 export type WebSocketConnection<T> = {

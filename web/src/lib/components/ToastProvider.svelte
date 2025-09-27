@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TOAST_KEY, type ToastAPI } from '$lib/context/toast-context';
   import { setContext } from 'svelte';
-  import { toast } from 'svoast';
+  import { toast, Toasts } from 'svoast';
 
   const toastAPI: ToastAPI = {
     success: (msg) => toast.success(msg),
@@ -13,4 +13,5 @@
   setContext<ToastAPI>(TOAST_KEY, toastAPI);
 </script>
 
+<Toasts position="top-center" />
 <slot />

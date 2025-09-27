@@ -113,6 +113,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 					log.Printf("Invalid word guessed")
 					var invalidWordPayload InvalidWordPayload
 					invalidWordPayload.Player = currentPlayer
+					invalidWordPayload.Round = round
 					invalidWordPayload.Word = msg.Word
 					p1.outgoing <- &invalidWordPayload
 					p2.outgoing <- &invalidWordPayload

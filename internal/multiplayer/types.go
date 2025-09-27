@@ -100,6 +100,7 @@ func (p *RoundStartPayload) MessageType() protocol.MessageType {
 
 type InvalidWordPayload struct {
 	Player *Player `json:"player"`
+	Round  int     `json:"round"`
 	Word   string  `json:"word"`
 }
 
