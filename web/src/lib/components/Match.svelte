@@ -74,8 +74,8 @@
 				myTurn = msg.player.id === playerInfo.id;
 				currentRound = msg.round;
 				deadline = msg.getDeadline();
+				currentGuess = Array(5).fill('');
 				if (myTurn) {
-					currentGuess = Array(5).fill('');
 					toast.info(`Round ${msg.round} started! It's your turn.`);
 				}
 			}
