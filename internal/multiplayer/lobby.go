@@ -76,7 +76,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 		var roundStartPayload RoundStartPayload
 		roundStartPayload.Player = currentPlayer
 		roundStartPayload.Round = round
-		roundStartPayload.Timeout = int(timeout.Seconds())
+		roundStartPayload.Deadline = time.Now().Add(timeout)
 		p1.outgoing <- &roundStartPayload
 		p2.outgoing <- &roundStartPayload
 		roundTimeout := time.After(timeout)
