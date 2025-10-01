@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="flex h-20 w-full flex-col items-center justify-center border-b border-b-[1px] border-b-gray-300 text-center"
+	class="sticky top-0 left-0 right-0 bg-white flex min-h-20 w-full flex-col items-center justify-center border-b border-b-[1px] border-b-gray-300 text-center"
 >
 	<div class="flex w-[400px] flex-col items-center justify-center">
 		<h2>

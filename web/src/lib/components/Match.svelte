@@ -132,7 +132,7 @@
 	});
 </script>
 
-<div class="flex h-screen flex-col items-center">
+<div class="min-h-screen flex flex-col items-center justify-center">
 	{#if gameOver}
 		<h2>Game Over</h2>
 		<p>The word was {gameOver.answer}.</p>
@@ -149,27 +149,29 @@
 		<button onclick={() => playAgain(false)}>Quit</button>
 	{:else}
 		<MatchHeader {currentRound} {myTurn} {deadline} />
-		<div class="board">
-			{#each guesses as guess, i}
-				<div class="row">
-					{#each guess as letter, j}
-						<div
-							class="box"
-							class:miss={letter?.matchType === 0}
-							class:present={letter?.matchType === 1}
-							class:hit={letter?.matchType === 2}
-						>
-							{i === currentRound - 1
-								? currentGuess[j]
-								: letter?.letter
-									? String.fromCharCode(letter.letter)
-									: ''}
-						</div>
-					{/each}
-				</div>
-			{/each}
+		<div class="py-4 flex flex-1 w-full flex-col items-center justify-center bg-[#f0f0f0]">
+			<div class="board">
+				{#each guesses as guess, i}
+					<div class="row">
+						{#each guess as letter, j}
+							<div
+								class="box"
+								class:miss={letter?.matchType === 0}
+								class:present={letter?.matchType === 1}
+								class:hit={letter?.matchType === 2}
+							>
+								{i === currentRound - 1
+									? currentGuess[j]
+									: letter?.letter
+										? String.fromCharCode(letter.letter)
+										: ''}
+							</div>
+						{/each}
+					</div>
+				{/each}
+				<div class="h-[180px]"></div>
+			</div>
 		</div>
-
 		<div class="keyboard">
 			{#each keyboardRows as row}
 				<div class="key-row">
@@ -186,15 +188,10 @@
 
 <style>
 	.board {
-		flex: 1;
 		display: grid;
 		width: 100%;
 		gap: 8px;
 		justify-content: center;
-		margin-bottom: 170px;
-		padding: 16px;
-		overflow-y: auto;
-		background: #f9f9f9;
 	}
 	.row {
 		display: flex;
