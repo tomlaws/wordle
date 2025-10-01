@@ -4,7 +4,7 @@
 	import { payloadRegistry } from './payload-registry';
 	import { createWebSocket, type WebSocketConnection } from '$lib/utils/websocket';
 	import { GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
-	import { setContext } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import Lobby from '$lib/components/Lobby.svelte';
 	import { GameState } from '$lib/types/state';
@@ -15,7 +15,12 @@
 		playerInfo: undefined,
 	});
 	setContext<Partial<GameContext>>(GAME_KEY, gameContext);
-
+	onMount(() => {
+		console.log('Page component mounted');
+		return () => {
+			console.log('Page component unmounted');
+		};
+	});
 	function enterGame() {
 		console.log('Entering game with nickname:', nickname);
 		const protocol = new Protocol(payloadRegistry);
