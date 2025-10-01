@@ -11,6 +11,7 @@
 		RoundStartPayload
 	} from '$lib/types/payload';
 	import { getContext, onMount } from 'svelte';
+	import MatchHeader from './match/MatchHeader.svelte';
 
 	// State for guesses and current input
 	let {
@@ -20,6 +21,7 @@
 	} = $props();
 	let { websocket, playerInfo } = getContext<GameContext>(GAME_KEY);
 	let myTurn = $state<boolean | null>(null);
+	let deadline = $state<Date | null>(null);
 	let loading = $state(false);
 	let gameOver = $state<GameOverPayload | null>(null);
 	let guesses = $state<Array<FeedbackPayload['feedback']>>(
@@ -71,6 +73,7 @@
 			if (msg instanceof RoundStartPayload) {
 				myTurn = msg.player.id === playerInfo.id;
 				currentRound = msg.round;
+				deadline = msg.getDeadline();
 				if (myTurn) {
 					currentGuess = Array(5).fill('');
 					toast.info(`Round ${msg.round} started! It's your turn.`);
@@ -129,7 +132,7 @@
 	});
 </script>
 
-<div class="flex h-screen flex-col items-center justify-center">
+<div class="flex h-screen flex-col items-center">
 	{#if gameOver}
 		<h2>Game Over</h2>
 		<p>The word was {gameOver.answer}.</p>
@@ -145,11 +148,7 @@
 		<button onclick={() => playAgain(true)}>Play Again</button>
 		<button onclick={() => playAgain(false)}>Quit</button>
 	{:else}
-		<h2 class="flex h-16 items-center justify-center text-center">
-			<!-- show round -->
-			Round {currentRound} -
-			{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}
-		</h2>
+		<MatchHeader {currentRound} {myTurn} {deadline} />
 		<div class="board">
 			{#each guesses as guess, i}
 				<div class="row">
@@ -187,6 +186,7 @@
 
 <style>
 	.board {
+		flex: 1;
 		display: grid;
 		width: 100%;
 		gap: 8px;

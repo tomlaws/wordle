@@ -42,6 +42,10 @@
 			}
 			if (msg instanceof GameStartPayload) {
 				gameState = GameState.IN_GAME;
+				gameContext.matchInfo = {
+					player1: msg.player1,
+					player2: msg.player2,
+				};
 			}
 		});
 	}

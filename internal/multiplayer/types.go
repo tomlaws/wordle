@@ -2,6 +2,7 @@ package multiplayer
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/tomlaws/wordle/internal/game"
 	"github.com/tomlaws/wordle/internal/protocol"
@@ -89,9 +90,9 @@ func (p *GameStartPayload) MessageType() protocol.MessageType {
 }
 
 type RoundStartPayload struct {
-	Player  *Player `json:"player"`
-	Round   int     `json:"round"`
-	Timeout int     `json:"timeout"` // seconds
+	Player   *Player   `json:"player"`
+	Round    int       `json:"round"`
+	Deadline time.Time `json:"deadline"`
 }
 
 func (p *RoundStartPayload) MessageType() protocol.MessageType {

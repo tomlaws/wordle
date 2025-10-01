@@ -1,6 +1,3 @@
-import type { Payload } from "$lib/utils/message";
-
-
 export class PlayerInfoPayload {
     id!: string;
     nickname!: string;
@@ -37,7 +34,11 @@ export class GuessPayload {
 export class RoundStartPayload {
     player!: { id: string; nickname: string; };
     round!: number;
-    timeout!: number;
+    deadline!: string;
+
+    getDeadline(): Date {
+        return new Date(this.deadline);
+    }
 
     MessageType(): string {
         return 'round_start';

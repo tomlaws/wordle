@@ -92,13 +92,12 @@ func (c *Controller) start() error {
 			case *multiplayer.RoundStartPayload:
 				sameRound := msg.Round == currentRound
 				currentRound = msg.Round
-				timeout := msg.Timeout
 				// Handle guess input when it's the player's turn
 				if msg.Player.ID == me.ID {
 					fmt.Fprintf(output, "=====Round (%d/%d)=====\n", currentRound, maxGuesses)
 					c.inputTrigger <- InputTrigger{Category: GuessWord}
 					if sameRound {
-						fmt.Fprintln(output, "You have", timeout, "seconds to make your guess.")
+						fmt.Fprintln(output, "Previous input was invalid. Please try again.")
 					}
 					fmt.Fprintf(output, "Enter your guess (%d/%d): ", currentRound, maxGuesses)
 				} else {
