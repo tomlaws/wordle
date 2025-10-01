@@ -66,12 +66,14 @@
 		}
 	}
 	onMount(() => {
-		websocket.messages$.subscribe((msg) => {
+		console.log('Match component mounted, subscribing to websocket messages');
+		const sub = websocket.messages$.subscribe((msg) => {
 			if (msg instanceof RoundStartPayload) {
 				myTurn = msg.player.id === playerInfo.id;
+				currentRound = msg.round;
 				if (myTurn) {
-					currentRound = msg.round;
 					currentGuess = Array(5).fill('');
+					toast.info(`Round ${msg.round} started! It's your turn.`);
 				}
 			}
 			if (msg instanceof InvalidWordPayload) {
@@ -119,61 +121,68 @@
 				}
 			}
 		});
+
+		return () => {
+			sub.unsubscribe();
+			console.log('Match component unmounted, unsubscribed from websocket messages');
+		};
 	});
 </script>
 
-<div class="flex flex-col justify-center items-center h-screen">
-{#if gameOver}
-	<h2>Game Over</h2>
-	<p>The word was {gameOver.answer}.</p>
-	{#if gameOver.winner}
-		{#if gameOver.winner.id === playerInfo.id}
-			<p>Congratulations, you won!</p>
+<div class="flex h-screen flex-col items-center justify-center">
+	{#if gameOver}
+		<h2>Game Over</h2>
+		<p>The word was {gameOver.answer}.</p>
+		{#if gameOver.winner}
+			{#if gameOver.winner.id === playerInfo.id}
+				<p>Congratulations, you won!</p>
+			{:else}
+				<p>{gameOver.winner.nickname} won the game.</p>
+			{/if}
 		{:else}
-			<p>{gameOver.winner.nickname} won the game.</p>
+			<p>The game ended in a draw.</p>
 		{/if}
+		<button onclick={() => playAgain(true)}>Play Again</button>
+		<button onclick={() => playAgain(false)}>Quit</button>
 	{:else}
-		<p>The game ended in a draw.</p>
-	{/if}
-	<button onclick={() => playAgain(true)}>Play Again</button>
-	<button onclick={() => playAgain(false)}>Quit</button>
-{:else}
-	<h2 class="text-center h-16 flex items-center justify-center">
-		{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}
-	</h2>
-	<div class="board">
-		{#each guesses as guess, i}
-			<div class="row">
-				{#each guess as letter, j}
-					<div
-						class="box"
-						class:miss={letter?.matchType === 0}
-						class:present={letter?.matchType === 1}
-						class:hit={letter?.matchType === 2}
-					>
-						{i === currentRound - 1
-							? currentGuess[j]
-							: letter?.letter
-								? String.fromCharCode(letter.letter)
-								: ''}
-					</div>
-				{/each}
-			</div>
-		{/each}
-	</div>
+		<h2 class="flex h-16 items-center justify-center text-center">
+			<!-- show round -->
+			Round {currentRound} -
+			{myTurn == null ? 'Loading' : myTurn ? 'Your Turn!' : 'Waiting for Opponent...'}
+		</h2>
+		<div class="board">
+			{#each guesses as guess, i}
+				<div class="row">
+					{#each guess as letter, j}
+						<div
+							class="box"
+							class:miss={letter?.matchType === 0}
+							class:present={letter?.matchType === 1}
+							class:hit={letter?.matchType === 2}
+						>
+							{i === currentRound - 1
+								? currentGuess[j]
+								: letter?.letter
+									? String.fromCharCode(letter.letter)
+									: ''}
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
 
-	<div class="keyboard">
-		{#each keyboardRows as row}
-			<div class="key-row">
-				{#each row as key}
-					<button class="key" disabled={!myTurn || loading} onclick={() => handleKey(key)}
-						>{key}</button
-					>
-				{/each}
-			</div>
-		{/each}
-	</div>
-{/if}
+		<div class="keyboard">
+			{#each keyboardRows as row}
+				<div class="key-row">
+					{#each row as key}
+						<button class="key" disabled={!myTurn || loading} onclick={() => handleKey(key)}
+							>{key}</button
+						>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -183,8 +192,9 @@
 		gap: 8px;
 		justify-content: center;
 		margin-bottom: 170px;
-		padding-bottom: 16px;
+		padding: 16px;
 		overflow-y: auto;
+		background: #f9f9f9;
 	}
 	.row {
 		display: flex;
@@ -226,7 +236,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		background: #FFF;
+		background: #fff;
 		border-top: 1px solid #ccc;
 	}
 	.key-row {
