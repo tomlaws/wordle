@@ -10,12 +10,12 @@
 	];
 
 	const gameContext = getContext<GameContext>(GAME_KEY);
-	let { websocket, matchInfo, loading } = $derived(gameContext);
+	let { websocket, matchInfo } = $derived(gameContext);
 
 	let pressedKey: string | null = $state(null);
 
 	function submitGuess() {
-		loading = true;
+		matchInfo!.loading = true;
 		console.log(matchInfo!.currentGuess.join(''));
 		const guessPayload = new GuessPayload();
 		guessPayload.word = matchInfo!.currentGuess.join('');
@@ -67,36 +67,36 @@
 	});
 </script>
 
-<div class="keyboard {!matchInfo?.myTurn || loading ? 'keyboard--disabled' : ''}">
-	{#each keyboardRows as row}
-		<div class="key-row">
-			{#each row as key}
-				<button
-					class="key {pressedKey === key ? 'pressed' : ''}"
-					disabled={!matchInfo?.myTurn || loading}
-					onmousedown={() => (pressedKey = key)}
-					onmouseup={() => (pressedKey = null)}
-					onmouseleave={() => (pressedKey = null)}
-					onclick={() => handleKey(key)}>{key}</button
-				>
-			{/each}
-		</div>
-	{/each}
+<div
+	class="fixed bottom-0 left-0 right-0 flex h-[170px] flex-col items-center justify-center border-t border-t-gray-300 bg-white"
+>
+	{#if !matchInfo?.myTurn && matchInfo}
+		<div class="keyboard-overlay">Waiting for Opponent...</div>
+	{/if}
+	<div class="keyboard" class:keyboard--disabled={!matchInfo?.myTurn || matchInfo?.loading}>
+		{#each keyboardRows as row}
+			<div class="key-row">
+				{#each row as key}
+					<button
+						class="key {pressedKey === key ? 'pressed' : ''}"
+						disabled={!matchInfo?.myTurn || matchInfo?.loading}
+						onmousedown={() => (pressedKey = key)}
+						onmouseup={() => (pressedKey = null)}
+						onmouseleave={() => (pressedKey = null)}
+						onclick={() => handleKey(key)}>{key}</button
+					>
+				{/each}
+			</div>
+		{/each}
+	</div>
 </div>
 
 <style>
 	.keyboard {
-		position: fixed;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 170px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		background: #fff;
-		border-top: 1px solid #ccc;
 	}
 	.keyboard--disabled {
 		opacity: 0.5;
@@ -129,5 +129,22 @@
 	.key:active:enabled {
 		background: #ccc;
 		transform: scale(0.96);
+	}
+	.keyboard-overlay {
+		position: absolute;
+		inset: 0;
+		width: 100vw;
+		background: rgba(0, 0, 0, 0.75);
+		color: #fff;
+		text-align: center;
+		padding: 16px 0;
+		font-size: 1.2em;
+		font-weight: bold;
+		z-index: 1000;
+		pointer-events: none;
+		user-select: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 </style>

@@ -40,6 +40,7 @@
 			if (msg instanceof GameStartPayload) {
 				gameState = GameState.IN_GAME;
 				gameContext.matchInfo = {
+					loading: true,
 					player1: msg.player1,
 					player2: msg.player2,
 					guesses: Array.from({ length: 12 }, () => Array(5).fill(null)) ,

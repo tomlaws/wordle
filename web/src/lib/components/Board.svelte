@@ -25,7 +25,7 @@
 			{/each}
 		</div>
 	{/each}
-	<div class="h-[180px]"></div>
+	<div class="h-[180px] pointer-events-none"></div>
 </div>
 
 <style>
