@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
 
     export let deadline: Date;
 
     let timeLeft = '';
-    let interval: ReturnType<typeof setInterval>;
     let secondsLeft = 0;
 
     function updateTimeLeft() {
@@ -14,7 +13,6 @@
         if (diff <= 0) {
             timeLeft = '00:00';
             secondsLeft = 0;
-            clearInterval(interval);
             return;
         }
 
@@ -30,11 +28,8 @@
 
     onMount(() => {
         updateTimeLeft();
-        interval = setInterval(updateTimeLeft, 1000);
-    });
-
-    onDestroy(() => {
-        clearInterval(interval);
+        const interval = setInterval(updateTimeLeft, 1000);
+        return () => clearInterval(interval);
     });
 </script>
 
