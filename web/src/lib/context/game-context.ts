@@ -3,12 +3,12 @@ import type { Payload } from "$lib/utils/message";
 import type { WebSocketConnection } from "$lib/utils/websocket";
 
 export interface GameContext {
-    loading: boolean;
     websocket: WebSocketConnection<Payload>;
     playerInfo: {
         id: string; nickname: string
     };
     matchInfo: {
+        loading: boolean;
         player1: { id: string; nickname: string };
         player2: { id: string; nickname: string };
         guesses: Array<FeedbackPayload['feedback']>;

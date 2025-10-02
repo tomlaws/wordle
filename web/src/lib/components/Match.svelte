@@ -18,7 +18,7 @@
 	const gameContext = getContext<GameContext>(GAME_KEY);
 	const { websocket, playerInfo } = gameContext;
 	const toast = getContext<ToastAPI>(TOAST_KEY);
-	let { loading, matchInfo } = $derived(gameContext);
+	const { matchInfo } = $derived(gameContext);
 
 	onMount(() => {
 		console.log('Match component mounted, subscribing to websocket messages');
@@ -28,6 +28,7 @@
 				matchInfo!.currentRound = msg.round;
 				matchInfo!.deadline = msg.getDeadline();
 				matchInfo!.currentGuess = Array(5).fill('');
+				matchInfo!.loading = false;
 				if (matchInfo!.myTurn) {
 					toast.info(`Round ${msg.round} started! It's your turn.`);
 				}
@@ -36,7 +37,7 @@
 				console.log('Invalid word received', msg);
 				if (msg.round === matchInfo!.currentRound) {
 					if (msg.player.id === playerInfo.id) {
-						loading = false;
+						matchInfo!.loading = false;
 						matchInfo!.currentGuess = Array(5).fill('');
 						toast.info(`${msg.word} is not a valid word.`);
 					} else {
@@ -45,7 +46,7 @@
 				}
 			}
 			if (msg instanceof GuessTimeoutPayload) {
-				loading = false;
+				matchInfo!.loading = false;
 				if (msg.player.id === playerInfo.id) {
 					toast.error('You ran out of time!');
 				} else {
@@ -59,7 +60,7 @@
 				matchInfo!.guesses = matchInfo!.guesses;
 			}
 			if (msg instanceof FeedbackPayload) {
-				loading = false;
+				matchInfo!.loading = false;
 				msg.feedback.forEach((item) => {
 					matchInfo!.guesses[msg.round - 1][item.position] = item;
 				});
