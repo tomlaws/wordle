@@ -8,6 +8,7 @@
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import Lobby from '$lib/components/Lobby.svelte';
 	import { GameState } from '$lib/types/state';
+	import Button from '$lib/components/Button.svelte';
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
@@ -55,7 +56,10 @@
 
 {#if gameState == GameState.UNAUTHENTICATED}
 	<div class="mt-0 flex min-h-screen flex-col items-center justify-center gap-4">
-		<label for="nickname" class="text-lg font-semibold">Enter your nickname:</label>
+		<h1 class="text-xl font-bold text-blue-600">Welcome to Wordle!</h1>
+		<label for="nickname" class="text-sm font-semibold text-gray-700">
+			What's your Wordle warrior name? 🌟
+		</label>
 		<input
 			id="nickname"
 			type="text"
@@ -64,13 +68,12 @@
 			class="rounded-md border border-gray-300 px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
 			onkeydown={(e) => e.key === 'Enter' && enterGame()}
 		/>
-		<button
+		<Button
 			onclick={enterGame}
 			disabled={!nickname.trim()}
-			class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
 		>
-			Enter Game
-		</button>
+			Play
+		</Button>
 	</div>
 {:else}
 	<!-- Game UI goes here -->

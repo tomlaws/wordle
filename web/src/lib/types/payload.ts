@@ -87,6 +87,15 @@ export class GameOverPayload {
     }
 }
 
+export class TypingPayload {
+    player?: { id: string; nickname: string; };
+    word!: string;
+
+    MessageType(): string {
+        return 'typing';
+    }
+}
+
 export class PlayAgainPayload {
     confirm!: boolean;
 

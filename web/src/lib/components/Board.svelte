@@ -54,6 +54,7 @@
 		justify-content: center;
 		font-size: 1.5em;
 		background: #fff;
+		color: #97a5bc;
 		text-transform: uppercase;
 		border-radius: 4px;
 	}

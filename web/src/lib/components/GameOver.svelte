@@ -3,6 +3,7 @@
 	import { PlayAgainPayload, type GameOverPayload } from '$lib/types/payload';
 	export { GameOverPayload } from '$lib/types/payload';
 	import { getContext } from 'svelte';
+	import Button from './Button.svelte';
 
 	const gameContext = getContext<GameContext>(GAME_KEY);
 	const { websocket, playerInfo, matchInfo } = $derived(gameContext);
@@ -18,16 +19,20 @@
 	}
 </script>
 
-<h2>Game Over</h2>
-<p>The word was {matchInfo!.gameOver!.answer}.</p>
+<h2 class="text-2xl font-bold text-blue-600">
 {#if matchInfo!.gameOver!.winner}
 	{#if matchInfo!.gameOver!.winner.id === playerInfo.id}
-		<p>Congratulations, you won!</p>
+		<p>🎉 Congratulations, you won!</p>
 	{:else}
-		<p>{matchInfo!.gameOver!.winner.nickname} won the game.</p>
+		<p>🫢 Oops, you lost.</p>
 	{/if}
 {:else}
 	<p>The game ended in a draw.</p>
 {/if}
-<button onclick={() => playAgain(true)}>Play Again</button>
-<button onclick={() => playAgain(false)}>Quit</button>
+</h2>
+<p class="text-lg mt-2">The word was {matchInfo!.gameOver!.answer.toUpperCase()}.</p>
+
+<div class="mt-8 flex gap-4">
+	<Button onclick={() => playAgain(true)}>Play Again</Button>
+	<Button outline={true} onclick={() => playAgain(false)}>Quit</Button>
+</div>

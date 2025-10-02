@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type GameContext, GAME_KEY } from '$lib/context/game-context';
-	import { GuessPayload } from '$lib/types/payload';
+	import { GuessPayload, TypingPayload } from '$lib/types/payload';
 	import { onMount, onDestroy, getContext } from 'svelte';
 
 	const keyboardRows = [
@@ -14,12 +14,16 @@
 
 	let pressedKey: string | null = $state(null);
 
+	function sendTypingUpdate() {
+		const typingPayload = new TypingPayload();
+		typingPayload.word = matchInfo?.currentGuess.join('') || '';
+		websocket.send(typingPayload);
+	};
+
 	function submitGuess() {
 		matchInfo!.loading = true;
-		console.log(matchInfo!.currentGuess.join(''));
 		const guessPayload = new GuessPayload();
 		guessPayload.word = matchInfo!.currentGuess.join('');
-		console.log(guessPayload);
 		websocket.send(guessPayload);
 	}
 
@@ -32,9 +36,11 @@
 		} else if (key === 'Backspace') {
 			let idx = matchInfo!.currentGuess.findLastIndex((l) => l);
 			if (idx !== -1) matchInfo!.currentGuess[idx] = '';
+			sendTypingUpdate();
 		} else if (/^[A-Z]$/.test(key)) {
 			let idx = matchInfo!.currentGuess.findIndex((l) => !l);
 			if (idx !== -1) matchInfo!.currentGuess[idx] = key;
+			sendTypingUpdate();
 		}
 	}
 

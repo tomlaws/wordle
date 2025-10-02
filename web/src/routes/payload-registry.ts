@@ -1,4 +1,4 @@
-import { PlayerInfoPayload, MatchingPayload, GameStartPayload, GuessPayload, RoundStartPayload, InvalidWordPayload, GuessTimeoutPayload, FeedbackPayload, GameOverPayload, PlayAgainPayload } from "$lib/types/payload";
+import { PlayerInfoPayload, MatchingPayload, GameStartPayload, GuessPayload, RoundStartPayload, InvalidWordPayload, GuessTimeoutPayload, FeedbackPayload, GameOverPayload, TypingPayload, PlayAgainPayload } from "$lib/types/payload";
 import type { Payload } from "$lib/utils/message";
 
 export const payloadRegistry = new Map<string, () => Payload>();
@@ -11,4 +11,5 @@ payloadRegistry.set('invalid_word', () => new InvalidWordPayload());
 payloadRegistry.set('guess_timeout', () => new GuessTimeoutPayload());
 payloadRegistry.set('feedback', () => new FeedbackPayload());
 payloadRegistry.set('game_over', () => new GameOverPayload());
+payloadRegistry.set('typing', () => new TypingPayload());
 payloadRegistry.set('play_again', () => new PlayAgainPayload());
