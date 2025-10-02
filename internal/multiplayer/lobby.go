@@ -72,13 +72,18 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 	timeout := time.Duration(l.thinkTime) * time.Second
 	var winner *Player
 
-	for round <= 12 && g.State == game.InProgress && winner == nil {
+	sendRoundStart := func(player *Player, round int) {
 		var roundStartPayload RoundStartPayload
-		roundStartPayload.Player = currentPlayer
+		roundStartPayload.Player = player
 		roundStartPayload.Round = round
 		roundStartPayload.Deadline = time.Now().Add(timeout)
 		p1.outgoing <- &roundStartPayload
 		p2.outgoing <- &roundStartPayload
+	}
+
+	sendRoundStart(currentPlayer, round)
+
+	for round <= 12 && g.State == game.InProgress && winner == nil {
 		roundTimeout := time.After(timeout)
 
 		select {
@@ -96,12 +101,15 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 			guessTimeoutPayload.Round = round
 			p1.outgoing <- &guessTimeoutPayload
 			p2.outgoing <- &guessTimeoutPayload
-			// Swap players
+			// Swap players and increment round
 			round++
-			if currentPlayer == p1 {
-				currentPlayer = p2
-			} else {
-				currentPlayer = p1
+			if round <= 12 {
+				if currentPlayer == p1 {
+					currentPlayer = p2
+				} else {
+					currentPlayer = p1
+				}
+				sendRoundStart(currentPlayer, round)
 			}
 		case rawMsg := <-currentPlayer.incoming:
 			switch msg := rawMsg.(type) {
@@ -131,12 +139,15 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 				feedbackPayload.Feedback = result
 				p1.outgoing <- &feedbackPayload
 				p2.outgoing <- &feedbackPayload
-				// Swap players
+				// Swap players and increment round
 				round++
-				if currentPlayer == p1 {
-					currentPlayer = p2
-				} else {
-					currentPlayer = p1
+				if round <= 12 && winner == nil && g.State == game.InProgress {
+					if currentPlayer == p1 {
+						currentPlayer = p2
+					} else {
+						currentPlayer = p1
+					}
+					sendRoundStart(currentPlayer, round)
 				}
 			}
 		}

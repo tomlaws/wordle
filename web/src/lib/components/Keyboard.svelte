@@ -12,6 +12,8 @@
 	const gameContext = getContext<GameContext>(GAME_KEY);
 	let { websocket, matchInfo, loading } = $derived(gameContext);
 
+	let pressedKey: string | null = $state(null);
+
 	function submitGuess() {
 		loading = true;
 		console.log(matchInfo!.currentGuess.join(''));
@@ -38,34 +40,43 @@
 
 	function onKeyDown(event: KeyboardEvent) {
 		const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
-		if (
-			key === 'Enter' ||
-			key === 'Backspace' ||
-			/^[A-Z]$/.test(key)
-		) {
+		if (key === 'Enter' || key === 'Backspace' || /^[A-Z]$/.test(key)) {
 			event.preventDefault();
+			pressedKey = key;
 			handleKey(key);
+		}
+	}
+
+	function onKeyUp(event: KeyboardEvent) {
+		const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+		if (key === 'Enter' || key === 'Backspace' || /^[A-Z]$/.test(key)) {
+			pressedKey = null;
 		}
 	}
 
 	onMount(() => {
 		console.log('Keyboard component mounted, adding keydown listener');
 		window.addEventListener('keydown', onKeyDown);
+		window.addEventListener('keyup', onKeyUp);
 	});
 
 	onDestroy(() => {
 		console.log('Keyboard component unmounted, removing keydown listener');
 		window.removeEventListener('keydown', onKeyDown);
+		window.removeEventListener('keyup', onKeyUp);
 	});
 </script>
 
-<div class="keyboard">
+<div class="keyboard {!matchInfo?.myTurn || loading ? 'keyboard--disabled' : ''}">
 	{#each keyboardRows as row}
 		<div class="key-row">
 			{#each row as key}
 				<button
-					class="key"
+					class="key {pressedKey === key ? 'pressed' : ''}"
 					disabled={!matchInfo?.myTurn || loading}
+					onmousedown={() => (pressedKey = key)}
+					onmouseup={() => (pressedKey = null)}
+					onmouseleave={() => (pressedKey = null)}
 					onclick={() => handleKey(key)}>{key}</button
 				>
 			{/each}
@@ -87,6 +98,11 @@
 		background: #fff;
 		border-top: 1px solid #ccc;
 	}
+	.keyboard--disabled {
+		opacity: 0.5;
+		pointer-events: none;
+		user-select: none;
+	}
 	.key-row {
 		display: flex;
 		justify-content: center;
@@ -102,5 +118,16 @@
 		font-size: 1em;
 		cursor: pointer;
 		text-transform: uppercase;
+		transition:
+			background 0.1s,
+			transform 0.05s;
+	}
+	.key:hover:enabled {
+		background: #ddd;
+	}
+	.key.pressed:enabled,
+	.key:active:enabled {
+		background: #ccc;
+		transform: scale(0.96);
 	}
 </style>
