@@ -4,87 +4,40 @@
 	import {
 		FeedbackPayload,
 		GameOverPayload,
-		GuessPayload,
 		GuessTimeoutPayload,
 		InvalidWordPayload,
-		PlayAgainPayload,
 		RoundStartPayload
 	} from '$lib/types/payload';
 	import { getContext, onMount } from 'svelte';
 	import MatchHeader from './match/MatchHeader.svelte';
+	import Keyboard from './Keyboard.svelte';
+	import Board from './Board.svelte';
+	import GameOver from './GameOver.svelte';
 
 	// State for guesses and current input
-	let {
-		rounds = 12
-	}: {
-		rounds?: number;
-	} = $props();
-	let { websocket, playerInfo } = getContext<GameContext>(GAME_KEY);
-	let myTurn = $state<boolean | null>(null);
-	let deadline = $state<Date | null>(null);
-	let loading = $state(false);
-	let gameOver = $state<GameOverPayload | null>(null);
-	let guesses = $state<Array<FeedbackPayload['feedback']>>(
-		Array.from({ length: rounds }, () => Array(5).fill(null))
-	);
-	let currentRound = $state(-1);
-	let currentGuess = $state(Array(5).fill(''));
-
-	const keyboardRows = [
-		['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-		['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-		['Enter', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Backspace']
-	];
+	const gameContext = getContext<GameContext>(GAME_KEY);
+	const { websocket, playerInfo } = gameContext;
 	const toast = getContext<ToastAPI>(TOAST_KEY);
-	function submitGuess() {
-		loading = true;
-		console.log(currentGuess.join(''));
-		const guessPayload = new GuessPayload();
-		guessPayload.word = currentGuess.join('');
-		console.log(guessPayload);
-		websocket.send(guessPayload);
-	}
-	function handleKey(key) {
-		if (!myTurn) return;
-		if (key === 'Enter') {
-			if (currentGuess.every((l) => l)) {
-				submitGuess();
-			}
-		} else if (key === 'Backspace') {
-			let idx = currentGuess.findLastIndex((l) => l);
-			if (idx !== -1) currentGuess[idx] = '';
-		} else if (/^[A-Z]$/.test(key)) {
-			let idx = currentGuess.findIndex((l) => !l);
-			if (idx !== -1) currentGuess[idx] = key;
-		}
-	}
-	function playAgain(confirm: boolean) {
-		if (confirm) {
-			const playAgainPayload = new PlayAgainPayload();
-			playAgainPayload.confirm = true;
-			websocket.send(playAgainPayload);
-		} else {
-			location.reload();
-		}
-	}
+	let { loading, matchInfo } = $derived(gameContext);
+
 	onMount(() => {
 		console.log('Match component mounted, subscribing to websocket messages');
 		const sub = websocket.messages$.subscribe((msg) => {
 			if (msg instanceof RoundStartPayload) {
-				myTurn = msg.player.id === playerInfo.id;
-				currentRound = msg.round;
-				deadline = msg.getDeadline();
-				currentGuess = Array(5).fill('');
-				if (myTurn) {
+				matchInfo!.myTurn = msg.player.id === playerInfo.id;
+				matchInfo!.currentRound = msg.round;
+				matchInfo!.deadline = msg.getDeadline();
+				matchInfo!.currentGuess = Array(5).fill('');
+				if (matchInfo!.myTurn) {
 					toast.info(`Round ${msg.round} started! It's your turn.`);
 				}
 			}
 			if (msg instanceof InvalidWordPayload) {
 				console.log('Invalid word received', msg);
-				if (msg.round === currentRound) {
+				if (msg.round === matchInfo!.currentRound) {
 					if (msg.player.id === playerInfo.id) {
 						loading = false;
-						currentGuess = Array(5).fill('');
+						matchInfo!.currentGuess = Array(5).fill('');
 						toast.info(`${msg.word} is not a valid word.`);
 					} else {
 						toast.info(`${msg.player.nickname} guessed an invalid word ${msg.word}.`);
@@ -98,30 +51,23 @@
 				} else {
 					toast.info(`${msg.player.nickname} ran out of time.`);
 				}
-				guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
+				matchInfo!.guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
 					position: i,
 					letter: '-'.charCodeAt(0),
 					matchType: 0
 				}));
+				matchInfo!.guesses = matchInfo!.guesses;
 			}
 			if (msg instanceof FeedbackPayload) {
 				loading = false;
 				msg.feedback.forEach((item) => {
-					guesses[msg.round - 1][item.position] = item;
+					matchInfo!.guesses[msg.round - 1][item.position] = item;
 				});
+				matchInfo!.guesses = matchInfo!.guesses;
 			}
 			if (msg instanceof GameOverPayload) {
-				gameOver = msg;
-				toast.info(`Game over! The word was ${msg.answer}.`);
-				if (msg.winner) {
-					if (msg.winner.id === playerInfo.id) {
-						toast.success('You won!');
-					} else {
-						toast.error(`${msg.winner.nickname} won the game.`);
-					}
-				} else {
-					toast.info('The game ended in a draw.');
-				}
+				matchInfo!.gameOver = msg;
+				matchInfo!.deadline = undefined;
 			}
 		});
 
@@ -132,124 +78,16 @@
 	});
 </script>
 
-<div class="min-h-screen flex flex-col items-center justify-center">
-	{#if gameOver}
-		<h2>Game Over</h2>
-		<p>The word was {gameOver.answer}.</p>
-		{#if gameOver.winner}
-			{#if gameOver.winner.id === playerInfo.id}
-				<p>Congratulations, you won!</p>
-			{:else}
-				<p>{gameOver.winner.nickname} won the game.</p>
-			{/if}
+<div class="flex min-h-screen flex-col items-center justify-center">
+	<MatchHeader />
+	<div class="flex w-full flex-1 flex-col items-center justify-center bg-[#f0f0f0] py-4">
+		{#if matchInfo!.gameOver}
+			<GameOver />
 		{:else}
-			<p>The game ended in a draw.</p>
+			<Board />
 		{/if}
-		<button onclick={() => playAgain(true)}>Play Again</button>
-		<button onclick={() => playAgain(false)}>Quit</button>
-	{:else}
-		<MatchHeader {currentRound} {myTurn} {deadline} />
-		<div class="py-4 flex flex-1 w-full flex-col items-center justify-center bg-[#f0f0f0]">
-			<div class="board">
-				{#each guesses as guess, i}
-					<div class="row">
-						{#each guess as letter, j}
-							<div
-								class="box"
-								class:miss={letter?.matchType === 0}
-								class:present={letter?.matchType === 1}
-								class:hit={letter?.matchType === 2}
-							>
-								{i === currentRound - 1
-									? currentGuess[j]
-									: letter?.letter
-										? String.fromCharCode(letter.letter)
-										: ''}
-							</div>
-						{/each}
-					</div>
-				{/each}
-				<div class="h-[180px]"></div>
-			</div>
-		</div>
-		<div class="keyboard">
-			{#each keyboardRows as row}
-				<div class="key-row">
-					{#each row as key}
-						<button class="key" disabled={!myTurn || loading} onclick={() => handleKey(key)}
-							>{key}</button
-						>
-					{/each}
-				</div>
-			{/each}
-		</div>
+	</div>
+	{#if !matchInfo!.gameOver}
+		<Keyboard />
 	{/if}
 </div>
-
-<style>
-	.board {
-		display: grid;
-		width: 100%;
-		gap: 8px;
-		justify-content: center;
-	}
-	.row {
-		display: flex;
-		gap: 8px;
-	}
-	.box {
-		width: 40px;
-		height: 40px;
-		border: 2px solid #ccc;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.5em;
-		background: #fff;
-		text-transform: uppercase;
-	}
-	.box.miss {
-		background: #787c7e;
-		border-color: #787c7e;
-		color: #fff;
-	}
-	.box.present {
-		background: #c9c93e;
-		border-color: #c9c93e;
-		color: #fff;
-	}
-	.box.hit {
-		background: #6aaa64;
-		border-color: #6aaa64;
-		color: #fff;
-	}
-	.keyboard {
-		position: fixed;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 170px;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		background: #fff;
-		border-top: 1px solid #ccc;
-	}
-	.key-row {
-		display: flex;
-		justify-content: center;
-		gap: 6px;
-		margin-bottom: 6px;
-	}
-	.key {
-		min-width: 32px;
-		padding: 8px 12px;
-		background: #eee;
-		border: none;
-		border-radius: 4px;
-		font-size: 1em;
-		cursor: pointer;
-		text-transform: uppercase;
-	}
-</style>
