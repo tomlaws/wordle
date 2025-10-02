@@ -134,8 +134,7 @@
 		position: absolute;
 		inset: 0;
 		width: 100vw;
-		background: rgba(0, 0, 0, 0.75);
-		color: #fff;
+		background: rgba(255, 255, 255, 0.75);
 		text-align: center;
 		padding: 16px 0;
 		font-size: 1.2em;

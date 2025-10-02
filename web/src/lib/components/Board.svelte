@@ -1,14 +1,20 @@
 <script lang="ts">
 	import { type GameContext, GAME_KEY } from '$lib/context/game-context';
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 
 	const gameContext = getContext<GameContext>(GAME_KEY);
 	const { matchInfo } = $derived(gameContext);
+
+	$effect(() => {
+		document
+			.getElementById('row-' + matchInfo!.currentRound)
+			?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	});
 </script>
 
 <div class="board">
 	{#each matchInfo!.guesses as guess, i}
-		<div class="row">
+		<div class="row" id={'row-' + (i + 1)}>
 			{#each guess as letter, j}
 				<div
 					class="box"
@@ -25,7 +31,7 @@
 			{/each}
 		</div>
 	{/each}
-	<div class="h-[180px] pointer-events-none"></div>
+	<div class="pointer-events-none h-[180px]"></div>
 </div>
 
 <style>
