@@ -3,17 +3,14 @@
 	import { Protocol, type Message, type Payload } from '$lib/utils/message';
 	import { payloadRegistry } from './payload-registry';
 	import { createWebSocket, type WebSocketConnection } from '$lib/utils/websocket';
-	import { GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
+	import { FeedbackPayload, GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
 	import { onMount, setContext } from 'svelte';
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import Lobby from '$lib/components/Lobby.svelte';
 	import { GameState } from '$lib/types/state';
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
-	let gameContext = $state<Partial<GameContext>>({
-		websocket: undefined,
-		playerInfo: undefined,
-	});
+	let gameContext = $state<Partial<GameContext>>({});
 	setContext<Partial<GameContext>>(GAME_KEY, gameContext);
 	onMount(() => {
 		console.log('Page component mounted');
@@ -45,6 +42,10 @@
 				gameContext.matchInfo = {
 					player1: msg.player1,
 					player2: msg.player2,
+					guesses: Array.from({ length: 12 }, () => Array(5).fill(null)) ,
+					currentRound: -1,
+					currentGuess: Array(5).fill(''),
+					myTurn: false,
 				};
 			}
 		});
