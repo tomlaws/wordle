@@ -113,6 +113,16 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 			}
 		case rawMsg := <-currentPlayer.incoming:
 			switch msg := rawMsg.(type) {
+			case *TypingPayload:
+				log.Printf("Player %s is typing: %s", currentPlayer.Nickname, msg.Word)
+				// Send to the other player
+				if currentPlayer == p1 {
+					msg.Player = p1
+					p2.outgoing <- msg
+				} else {
+					msg.Player = p2
+					p1.outgoing <- msg
+				}
 			case *GuessPayload:
 				// Handle guess
 				log.Printf("Player %s guessed: %s", currentPlayer.Nickname, msg.Word)

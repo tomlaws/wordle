@@ -8,9 +8,9 @@
 </script>
 
 <div class="flex flex-col items-center justify-center min-h-screen text-[1.2rem] text-[#333]">
-    <p class="mb-4">Welcome to Wordle, {playerInfo.nickname}!</p>
+    <p class="mb-4 text-xl font-bold text-center text-gray-700">Just a moment, {playerInfo.nickname}!</p>
     <div class="spinner mb-4"></div>
-    <p>{message}</p>
+    <p class="text-center text-gray-600 text-sm">{message}</p>
 </div>
 
 <style>

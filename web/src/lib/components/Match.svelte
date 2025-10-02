@@ -6,7 +6,10 @@
 		GameOverPayload,
 		GuessTimeoutPayload,
 		InvalidWordPayload,
-		RoundStartPayload
+		RoundStartPayload,
+
+		TypingPayload
+
 	} from '$lib/types/payload';
 	import { getContext, onMount } from 'svelte';
 	import MatchHeader from './match/MatchHeader.svelte';
@@ -69,6 +72,9 @@
 			if (msg instanceof GameOverPayload) {
 				matchInfo!.gameOver = msg;
 				matchInfo!.deadline = undefined;
+			}
+			if (msg instanceof TypingPayload) {
+				matchInfo!.currentGuess = msg.word.split('');
 			}
 		});
 

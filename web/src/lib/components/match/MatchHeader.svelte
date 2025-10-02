@@ -26,7 +26,7 @@
 		<div class="mt-2 flex w-full items-center justify-between">
 			<div
 				class="w-1/3 overflow-hidden text-ellipsis whitespace-nowrap rounded-lg px-2 text-center"
-				class:bg-yellow-200={matchInfo?.myTurn ==
+				class:bg-blue-200={matchInfo?.myTurn ==
 					(matchInfo?.player1.nickname === playerInfo.nickname)}
 				class:bg-gray-200={matchInfo?.myTurn !=
 					(matchInfo?.player1.nickname === playerInfo.nickname)}
@@ -42,7 +42,7 @@
 			{/if}
 			<div
 				class="w-1/3 overflow-hidden text-ellipsis whitespace-nowrap rounded-lg px-2 text-center"
-				class:bg-yellow-200={matchInfo?.myTurn ==
+				class:bg-blue-200={matchInfo?.myTurn ==
 					(matchInfo?.player2.nickname === playerInfo.nickname)}
 				class:bg-gray-200={matchInfo?.myTurn !=
 					(matchInfo?.player2.nickname === playerInfo.nickname)}
