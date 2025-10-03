@@ -32,7 +32,7 @@ go run -ldflags="-X main.Port=8080 -X main.MaxGuesses=12 -X main.WordListPath=as
 ```
 #### Configuration
 - **Port:** The server listens on port 8080 by default.
-- **Max Guesses:** The maximum number of guesses is 12 by default.
+- **Max Guesses:** The maximum number of guesses per player is 12 by default.
 - **Word List:** The default word list is located at `assets/words.txt`.
 - **Think Time:** Each player has 60 seconds per turn by default.
 
@@ -60,7 +60,7 @@ or to provide a custom configuration
 go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
 ```
 #### Configuration
-- **Max Guesses:** The maximum number of guesses is 6 by default.
+- **Max Guesses:** The maximum number of guesses per player is 12 by default.
 - **Word List:** The default word list is located at `assets/words.txt`.
 
 ## Acknowledgments

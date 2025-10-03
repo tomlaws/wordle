@@ -2,13 +2,14 @@
 	import Match from '$lib/components/Match.svelte';
 	import { Protocol, type Message, type Payload } from '$lib/utils/message';
 	import { payloadRegistry } from './payload-registry';
-	import { createWebSocket, type WebSocketConnection } from '$lib/utils/websocket';
-	import { FeedbackPayload, GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
+	import { createWebSocket } from '$lib/utils/websocket';
+	import { GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
 	import { onMount, setContext } from 'svelte';
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import Lobby from '$lib/components/Lobby.svelte';
 	import { GameState } from '$lib/types/state';
-	import Button from '$lib/components/Button.svelte';
+	import Button from '$lib/components/common/Button.svelte';
+	import Input from '$lib/components/common/Input.svelte';
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
@@ -37,6 +38,8 @@
 			}
 			if (msg instanceof MatchingPayload) {
 				gameState = GameState.MATCHING;
+				// find header element and make it visible
+				document.getElementById('header')?.classList.remove('hidden');
 			}
 			if (msg instanceof GameStartPayload) {
 				gameState = GameState.IN_GAME;
@@ -44,11 +47,13 @@
 					loading: true,
 					player1: msg.player1,
 					player2: msg.player2,
-					guesses: Array.from({ length: 12 }, () => Array(5).fill(null)) ,
+					guesses: Array.from({ length: 12 }, () => Array(5).fill(null)),
 					currentRound: -1,
 					currentGuess: Array(5).fill(''),
-					myTurn: false,
+					myTurn: false
 				};
+				// find header element and make it invisible
+				document.getElementById('header')?.classList.add('hidden');
 			}
 		});
 	}
@@ -56,24 +61,17 @@
 
 {#if gameState == GameState.UNAUTHENTICATED}
 	<div class="mt-0 flex min-h-screen flex-col items-center justify-center gap-4">
-		<h1 class="text-xl font-bold text-blue-600">Welcome to Wordle!</h1>
-		<label for="nickname" class="text-sm font-semibold text-gray-700">
+		<h1 class="text-xl font-bold">Welcome to Wordle!</h1>
+		<label for="nickname" class="text-m text-sm font-semibold">
 			What's your Wordle warrior name? 🌟
 		</label>
-		<input
-			id="nickname"
-			type="text"
-			bind:value={nickname}
+		<Input
+			class="my-2"
 			placeholder="Nickname"
-			class="rounded-md border border-gray-300 px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+			bind:value={nickname}
 			onkeydown={(e) => e.key === 'Enter' && enterGame()}
 		/>
-		<Button
-			onclick={enterGame}
-			disabled={!nickname.trim()}
-		>
-			Play
-		</Button>
+		<Button onclick={enterGame} disabled={!nickname.trim()}>Play</Button>
 	</div>
 {:else}
 	<!-- Game UI goes here -->

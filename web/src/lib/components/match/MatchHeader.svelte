@@ -8,9 +8,9 @@
 </script>
 
 <div
-	class="sticky left-0 right-0 top-0 flex min-h-20 w-full flex-col items-center justify-center border-b border-b-[1px] border-b-gray-300 bg-white text-center"
+	class="sticky left-0 right-0 top-0 flex min-h-20 w-full flex-col items-center justify-center text-center bg-white dark:bg-[#191e25]"
 >
-	<div class="flex w-[400px] flex-col items-center justify-center">
+	<div class="flex w-full max-w-[400px] flex-col items-center justify-center px-4">
 		<h2 class="text-lg font-semibold text-gray-700">
 			{#if matchInfo?.gameOver}
 				Game Over
@@ -35,9 +35,7 @@
 			</div>
 			{#if matchInfo?.deadline}
 				<div>
-					<span class="ml-4 text-gray-500">
-						<Countdown deadline={matchInfo?.deadline} />
-					</span>
+					<Countdown deadline={matchInfo?.deadline} />
 				</div>
 			{/if}
 			<div

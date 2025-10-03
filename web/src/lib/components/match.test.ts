@@ -15,13 +15,36 @@ test('should notify when it is player\'s turn', async () => {
     id: '1',
     nickname: 'Player1'
   };
-  const { getByText, container } = render(Match, { context: new Map<Symbol, any>([[TOAST_KEY, mockToast], [GAME_KEY, { websocket, playerInfo }]]) });
+  const { getByText } = render(Match, {
+    context: new Map<Symbol, any>([
+      [TOAST_KEY, mockToast],
+      [
+        GAME_KEY,
+        {
+          websocket: websocket,
+          playerInfo: playerInfo,
+          matchInfo: {
+            player1: playerInfo,
+            player2: {
+              id: '2',
+              nickname: 'Player2'
+            },
+            currentRound: 1,
+            deadline: (Date.now() + 60000).toString(), // 1 minute from now
+            currentGuess: Array(5).fill(''),
+            loading: false,
+            guesses: []
+          }
+        }
+      ]
+    ])
+  });
   await expect(getByText('Loading')).toBeInTheDocument()
 
   const roundStartPayload = new RoundStartPayload();
   roundStartPayload.player = playerInfo;
   roundStartPayload.round = 1;
-  roundStartPayload.timeout = 60;
+  roundStartPayload.deadline = (Date.now() + 60000).toString(); // 1 minute from now
   websocket.send(roundStartPayload);
   await tick();
   await expect(getByText('Your Turn!')).toBeInTheDocument();
@@ -75,11 +98,11 @@ test('should render correct feedback classes for each letter after guess', async
   feedbackPayload.player = playerInfo;
   feedbackPayload.round = 1;
   feedbackPayload.feedback = [
-    { letter: 'A', position: 0, matchType: 0 },
-    { letter: 'B', position: 1, matchType: 1 },
-    { letter: 'C', position: 2, matchType: 2 },
-    { letter: 'D', position: 3, matchType: 0 },
-    { letter: 'E', position: 4, matchType: 1 }
+    { letter: 'A'.charCodeAt(0), position: 0, matchType: 0 },
+    { letter: 'B'.charCodeAt(0), position: 1, matchType: 1 },
+    { letter: 'C'.charCodeAt(0), position: 2, matchType: 2 },
+    { letter: 'D'.charCodeAt(0), position: 3, matchType: 0 },
+    { letter: 'E'.charCodeAt(0), position: 4, matchType: 1 }
   ];
   websocket.send(feedbackPayload);
 

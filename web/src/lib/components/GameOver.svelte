@@ -3,7 +3,7 @@
 	import { PlayAgainPayload, type GameOverPayload } from '$lib/types/payload';
 	export { GameOverPayload } from '$lib/types/payload';
 	import { getContext } from 'svelte';
-	import Button from './Button.svelte';
+	import Button from './common/Button.svelte';
 
 	const gameContext = getContext<GameContext>(GAME_KEY);
 	const { websocket, playerInfo, matchInfo } = $derived(gameContext);
@@ -19,7 +19,7 @@
 	}
 </script>
 
-<h2 class="text-2xl font-bold text-blue-600">
+<h2 class="text-2xl font-bold">
 {#if matchInfo!.gameOver!.winner}
 	{#if matchInfo!.gameOver!.winner.id === playerInfo.id}
 		<p>🎉 Congratulations, you won!</p>
