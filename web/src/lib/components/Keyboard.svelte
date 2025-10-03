@@ -2,6 +2,9 @@
 	import { type GameContext, GAME_KEY } from '$lib/context/game-context';
 	import { GuessPayload, TypingPayload } from '$lib/types/payload';
 	import { onMount, onDestroy, getContext } from 'svelte';
+	import { tooltip, Tooltip } from '@svelte-plugins/tooltips';
+	import IconArrowLeft from './icons/IconArrowLeft.svelte';
+	import IconSendSolid from './icons/IconSendSolid.svelte';
 
 	const keyboardRows = [
 		['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -18,7 +21,7 @@
 		const typingPayload = new TypingPayload();
 		typingPayload.word = matchInfo?.currentGuess.join('') || '';
 		websocket.send(typingPayload);
-	};
+	}
 
 	function submitGuess() {
 		matchInfo!.loading = true;
@@ -74,22 +77,36 @@
 </script>
 
 <div
-	class="fixed bottom-0 left-0 right-0 flex h-[170px] flex-col items-center justify-center border-t border-t-gray-300 bg-white"
+	class="fixed bottom-0 left-0 right-0 flex h-[170px] flex-col items-center justify-center bg-white dark:bg-[#191e25]"
 >
 	{#if !matchInfo?.myTurn && matchInfo}
-		<div class="keyboard-overlay">Waiting for Opponent...</div>
+		<div class="keyboard-overlay bg-white opacity-75 dark:bg-[#191e25]">
+			Waiting for Opponent...
+		</div>
 	{/if}
 	<div class="keyboard" class:keyboard--disabled={!matchInfo?.myTurn || matchInfo?.loading}>
 		{#each keyboardRows as row}
 			<div class="key-row">
 				{#each row as key}
-					<button
-						class="key {pressedKey === key ? 'pressed' : ''}"
-						disabled={!matchInfo?.myTurn || matchInfo?.loading}
-						onmousedown={() => (pressedKey = key)}
-						onmouseup={() => (pressedKey = null)}
-						onmouseleave={() => (pressedKey = null)}
-						onclick={() => handleKey(key)}>{key}</button
+					<Tooltip content={key === 'Backspace' ? 'Delete' : (key === 'Enter' ? 'Submit' : '')} show={false}>
+						<button
+							class="key {pressedKey === key
+								? 'pressed'
+								: ''} bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+							disabled={!matchInfo?.myTurn || matchInfo?.loading}
+							onmousedown={() => (pressedKey = key)}
+							onmouseup={() => (pressedKey = null)}
+							onmouseleave={() => (pressedKey = null)}
+							onclick={() => handleKey(key)}
+						>
+							{#if key === 'Backspace'}
+								<IconArrowLeft class="mx-auto p-1" />
+							{:else if key === 'Enter'}
+								<IconSendSolid class="mx-auto p-1" />
+							{:else}
+								{key}
+							{/if}
+						</button></Tooltip
 					>
 				{/each}
 			</div>
@@ -116,31 +133,25 @@
 		margin-bottom: 6px;
 	}
 	.key {
-		min-width: 32px;
-		padding: 8px 12px;
-		background: #eee;
+		width: clamp(30px, 6vw, 32px);
+		padding: clamp(6px, 1.5vw, 8px) 0;
 		border: none;
 		border-radius: 4px;
-		font-size: 1em;
 		cursor: pointer;
 		text-transform: uppercase;
 		transition:
 			background 0.1s,
 			transform 0.05s;
 	}
-	.key:hover:enabled {
-		background: #ddd;
-	}
+
 	.key.pressed:enabled,
 	.key:active:enabled {
-		background: #ccc;
 		transform: scale(0.96);
 	}
 	.keyboard-overlay {
 		position: absolute;
 		inset: 0;
 		width: 100vw;
-		background: rgba(255, 255, 255, 0.75);
 		text-align: center;
 		padding: 16px 0;
 		font-size: 1.2em;

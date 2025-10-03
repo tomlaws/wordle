@@ -1,27 +1,19 @@
 <script lang="ts">
-    const { disabled, type, outline, children, ...props }: {
-        disabled?: boolean;
-        type?: "button" | "submit" | "reset" | null | undefined;
-        outline?: boolean;
-        children: () => any;
-        [key: string]: any;
-    } = $props();
+    import type { HTMLButtonAttributes } from 'svelte/elements';
+    let { children, ...props }: HTMLButtonAttributes = $props();
 </script>
 
 <button
     class="game-btn"
-    class:outline={outline}
-    {disabled}
-    type={type}
     {...props}
 >
-    {@render children()}
+    {@render children?.()}
 </button>
 
 <style>
 .game-btn {
     padding: 0.7em 1.8em;
-    background: #3b82f6; /* blue */
+    background: var(--color-btn);
     color: #fff;
     border: none;
     border-radius: 0.5em;
@@ -36,16 +28,17 @@
     align-items: center;
     gap: 0.4em;
     text-transform: uppercase;
+    letter-spacing: 0.2em;
 }
 
 /* Use a slightly lighter and darker shade of the base color for hover and active */
 .game-btn:hover:not(:disabled) {
-    background: #60a5fa; /* lighter blue */
+    background: var(--color-btn-hover);
     transform: translateY(-1px) scale(1.02);
 }
 
 .game-btn:active:not(:disabled) {
-    background: #1d4ed8; /* deeper blue */
+    background: var(--color-btn-active);
     transform: scale(0.97);
 }
 
@@ -58,14 +51,14 @@
 
 .game-btn.outline {
     background: transparent;
-    border: 2px solid #3b82f6;
-    color: #3b82f6;
+    border: 2px solid var(--color-btn);
+    color: var(--color-btn);
 }
 .game-btn.outline:hover:not(:disabled) {
     background: rgba(59, 130, 246, 0.1);
 }
 .game-btn.outline:active:not(:disabled) {
     background: rgba(59, 130, 246, 0.2);
-    border-color: #2563eb;
+    border-color: var(--color-btn-active);
 }
 </style>

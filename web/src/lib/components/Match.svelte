@@ -87,14 +87,14 @@
 
 <div class="flex min-h-screen flex-col items-center justify-center">
 	<MatchHeader />
-	<div class="flex w-full flex-1 flex-col items-center justify-center bg-[#f0f0f0] py-4">
-		{#if matchInfo!.gameOver}
+	<div class="flex w-full flex-1 flex-col items-center justify-center py-4">
+		{#if matchInfo?.gameOver}
 			<GameOver />
 		{:else}
 			<Board />
 		{/if}
 	</div>
-	{#if !matchInfo!.gameOver}
+	{#if !matchInfo?.gameOver}
 		<Keyboard />
 	{/if}
 </div>

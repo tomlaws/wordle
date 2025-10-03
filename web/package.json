@@ -34,6 +34,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@svelte-plugins/tooltips": "^3.0.3",
 		"change-case": "^5.4.4",
 		"rxjs": "^7.8.2"
 	}

@@ -1,1 +1,29 @@
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-primary: #3fc2d9;
+    --color-btn: #3fc2d9;
+    --color-btn-hover: #2bb1c4;
+    --color-btn-active: #1fa3b5;
+    --color-input-bg: #f7f7f7;
+    --color-input-border: #d1d5dc;
+}
+
+.dark {
+    --color-primary: #3fc2d9;
+    --color-btn: #3fc2d9;
+    --color-btn-hover: #2bb1c4;
+    --color-btn-active: #1fa3b5;
+    --color-input-bg: #1e2939;
+    --color-input-border: #3f4f69;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-primary);
+}
+
+:focus {
+    --tw-ring-color: var(--color-primary);
+}
