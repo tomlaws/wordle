@@ -14,14 +14,7 @@
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
 	setContext<Partial<GameContext>>(GAME_KEY, gameContext);
-	onMount(() => {
-		console.log('Page component mounted');
-		return () => {
-			console.log('Page component unmounted');
-		};
-	});
 	function enterGame() {
-		console.log('Entering game with nickname:', nickname);
 		const protocol = new Protocol(payloadRegistry);
 		if (!gameContext.websocket) {
 			gameContext.websocket = createWebSocket(
@@ -31,7 +24,6 @@
 			);
 		}
 		gameContext.websocket.messages$.subscribe((msg) => {
-			console.log('Received message', msg);
 			if (msg instanceof PlayerInfoPayload) {
 				gameState = GameState.AUTHENTICATED;
 				gameContext.playerInfo = { id: msg.id, nickname: msg.nickname };

@@ -24,7 +24,6 @@
 	const { matchInfo } = $derived(gameContext);
 
 	onMount(() => {
-		console.log('Match component mounted, subscribing to websocket messages');
 		const sub = websocket.messages$.subscribe((msg) => {
 			if (msg instanceof RoundStartPayload) {
 				matchInfo!.myTurn = msg.player.id === playerInfo.id;
@@ -37,7 +36,6 @@
 				// }
 			}
 			if (msg instanceof InvalidWordPayload) {
-				console.log('Invalid word received', msg);
 				if (msg.round === matchInfo!.currentRound) {
 					if (msg.player.id === playerInfo.id) {
 						matchInfo!.loading = false;
@@ -80,7 +78,6 @@
 
 		return () => {
 			sub.unsubscribe();
-			console.log('Match component unmounted, unsubscribed from websocket messages');
 		};
 	});
 </script>
