@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -12,10 +13,20 @@ import (
 
 var Upgrader = websocket.Upgrader{}
 
+const pingInterval = 15 * time.Second
+const pongWait = 25 * time.Second
+const writeWait = 5 * time.Second
+
 func handleRead(client *Client) {
 	defer func() {
 		client.conn.Close()
 	}()
+	// handling pong messages from client
+	client.conn.SetReadDeadline(time.Now().Add(pongWait))
+	client.conn.SetPongHandler(func(string) error {
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 	for {
 		var msg json.RawMessage
 		if err := client.conn.ReadJSON(&msg); err != nil {
@@ -29,17 +40,28 @@ func handleRead(client *Client) {
 }
 
 func handleWrite(client *Client) {
+	ticker := time.NewTicker(pingInterval)
 	defer func() {
 		client.conn.Close()
+		ticker.Stop()
 	}()
 	for {
-		msg := <-client.outgoing
-		if err := client.conn.WriteJSON(msg); err != nil {
-			client.error <- err
-			log.Printf("Error sending message to player %s: %v", client.nickname, err)
-			break
+		select {
+		case msg := <-client.outgoing:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteJSON(msg); err != nil {
+				client.error <- err
+				log.Printf("Error sending message to player %s: %v", client.nickname, err)
+				break
+			}
+			log.Printf("Sending message to player %s: %s", client.nickname, utils.JsonToString(msg))
+		case <-ticker.C:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				client.error <- err
+				log.Printf("Error sending ping to player %s: %v", client.nickname, err)
+			}
 		}
-		log.Printf("Sending message to player %s: %s", client.nickname, utils.JsonToString(msg))
 	}
 }
 
@@ -58,7 +80,6 @@ func socketHandler(newClientCallback func(client *Client)) func(w http.ResponseW
 			log.Print("Error during connection upgradation:", err)
 			return
 		}
-
 		client := &Client{
 			id:       uuid.New().String(),
 			nickname: nickname,
@@ -76,5 +97,6 @@ func socketHandler(newClientCallback func(client *Client)) func(w http.ResponseW
 func NewServer(
 	newClientCallback func(client *Client),
 ) func(w http.ResponseWriter, r *http.Request) {
+	// set deadline for both read and write to 60 seconds
 	return socketHandler(newClientCallback)
 }
