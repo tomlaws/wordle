@@ -42,9 +42,9 @@
 					if (msg.player.id === playerInfo.id) {
 						matchInfo!.loading = false;
 						matchInfo!.currentGuess = Array(5).fill('');
-						toast.info(`${msg.word} is not a valid word.`);
+						toast.error(`${msg.word} is not a valid word.`);
 					} else {
-						toast.info(`${msg.player.nickname} guessed an invalid word ${msg.word}.`);
+						toast.warning(`${msg.player.nickname} guessed an invalid word ${msg.word}.`);
 					}
 				}
 			}
