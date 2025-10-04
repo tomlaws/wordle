@@ -61,7 +61,7 @@
 
 {#if gameState == GameState.UNAUTHENTICATED}
 	<div class="mt-0 flex min-h-screen flex-col items-center justify-center gap-4">
-		<h1 class="text-xl font-bold">Welcome to Wordle!</h1>
+		<h1 class="text-xl font-bold uppercase">Welcome!</h1>
 		<label for="nickname" class="text-m text-sm font-semibold">
 			What's your Wordle warrior name? 🌟
 		</label>

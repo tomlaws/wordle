@@ -30,7 +30,7 @@
 	});
 </script>
 
-<span class="countdown text-gray-700 dark:text-gray-200 tracking-wide {secondsLeft <= 15 ? 'urgent' : ''}">
+<span class="countdown text-gray-700 dark:text-gray-200 {secondsLeft <= 15 ? 'urgent' : ''}">
     {timeLeft}
 </span>
 
