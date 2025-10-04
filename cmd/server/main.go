@@ -10,7 +10,7 @@ import (
 )
 
 var Port string = "8080"
-var MaxGuesses string = "12"
+var MaxGuesses string = "6"
 var ThinkTime string = "60"
 var WordListPath string = "assets/words.txt"
 

@@ -85,7 +85,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 
 	roundTimer := sendRoundStart(currentPlayer, round)
 
-	for round <= 12 && g.State == game.InProgress && winner == nil {
+	for round <= l.maxGuesses && g.State == game.InProgress && winner == nil {
 		select {
 		case p1Err := <-p1.error:
 			log.Println("Error from player 1:", p1Err)
@@ -103,7 +103,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 			p2.outgoing <- &guessTimeoutPayload
 			// Swap players and increment round
 			round++
-			if round <= 12 {
+			if round <= l.maxGuesses {
 				if currentPlayer == p1 {
 					currentPlayer = p2
 				} else {
@@ -151,7 +151,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 				p2.outgoing <- &feedbackPayload
 				// Swap players and increment round
 				round++
-				if round <= 12 && winner == nil && g.State == game.InProgress {
+				if round <= l.maxGuesses && winner == nil && g.State == game.InProgress {
 					if currentPlayer == p1 {
 						currentPlayer = p2
 					} else {
