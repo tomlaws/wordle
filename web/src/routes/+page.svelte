@@ -56,7 +56,7 @@
 						loading: true,
 						player1: msg.player1,
 						player2: msg.player2,
-						guesses: Array.from({ length: 12 }, () => Array(5).fill(null)),
+						guesses: Array.from({ length: msg.maxGuesses }, () => Array(5).fill(null)),
 						currentRound: -1,
 						currentGuess: Array(5).fill(''),
 						myTurn: false
