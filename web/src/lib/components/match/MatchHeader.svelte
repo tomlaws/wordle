@@ -12,7 +12,7 @@
 		class="sticky left-0 right-0 top-0 z-10 flex min-h-20 w-full flex-col items-center justify-center border-b border-gray-300 bg-white text-center dark:border-gray-700 dark:bg-[#191e25]"
 	>
 		<div class="flex w-full max-w-[400px] flex-col items-center justify-center px-4">
-			<h2 class="text-lg font-semibold uppercase text-gray-700 dark:text-gray-300">
+			<h2 class="text-lg font-semibold uppercase text-gray-700 dark:text-gray-300 tracking-wide">
 				{#if matchInfo?.gameOver}
 					Game Over
 				{:else}
