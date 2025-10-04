@@ -72,20 +72,20 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 	timeout := time.Duration(l.thinkTime) * time.Second
 	var winner *Player
 
-	sendRoundStart := func(player *Player, round int) {
+	sendRoundStart := func(player *Player, round int) <-chan time.Time {
 		var roundStartPayload RoundStartPayload
 		roundStartPayload.Player = player
 		roundStartPayload.Round = round
 		roundStartPayload.Deadline = time.Now().Add(timeout)
 		p1.outgoing <- &roundStartPayload
 		p2.outgoing <- &roundStartPayload
+		roundTimer := time.After(timeout)
+		return roundTimer
 	}
 
-	sendRoundStart(currentPlayer, round)
+	roundTimer := sendRoundStart(currentPlayer, round)
 
 	for round <= 12 && g.State == game.InProgress && winner == nil {
-		roundTimeout := time.After(timeout)
-
 		select {
 		case p1Err := <-p1.error:
 			log.Println("Error from player 1:", p1Err)
@@ -93,7 +93,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 		case p2Err := <-p2.error:
 			log.Println("Error from player 2:", p2Err)
 			winner = p1
-		case <-roundTimeout:
+		case <-roundTimer:
 			log.Println("Guess timeout for player:", currentPlayer.Nickname)
 			// Send timeout message
 			var guessTimeoutPayload GuessTimeoutPayload
@@ -109,7 +109,7 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 				} else {
 					currentPlayer = p1
 				}
-				sendRoundStart(currentPlayer, round)
+				roundTimer = sendRoundStart(currentPlayer, round)
 			}
 		case rawMsg := <-currentPlayer.incoming:
 			switch msg := rawMsg.(type) {
@@ -157,12 +157,11 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 					} else {
 						currentPlayer = p1
 					}
-					sendRoundStart(currentPlayer, round)
+					roundTimer = sendRoundStart(currentPlayer, round)
 				}
 			}
 		}
 	}
-
 	// Game over
 	var gameOverPayload GameOverPayload
 	if winner != nil {
