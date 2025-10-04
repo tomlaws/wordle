@@ -27,7 +27,7 @@
 		<p>🫢 Oops, you lost.</p>
 	{/if}
 {:else}
-	<p>The game ended in a draw.</p>
+	<p>🤲🏻 The game ended in a draw.</p>
 {/if}
 </h2>
 <p class="text-lg mt-2">The word was {matchInfo!.gameOver!.answer.toUpperCase()}.</p>

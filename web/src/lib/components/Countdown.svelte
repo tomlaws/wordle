@@ -30,7 +30,7 @@
 	});
 </script>
 
-<span class="countdown tracking-wide {secondsLeft <= 15 ? 'urgent' : ''}">
+<span class="countdown text-gray-700 dark:text-gray-200 tracking-wide {secondsLeft <= 15 ? 'urgent' : ''}">
     {timeLeft}
 </span>
 
@@ -39,7 +39,6 @@
         font-family: monospace;
         font-size: 1rem;
         font-weight: 600;
-        color: var(--color-gray-600);
     }
     .countdown.urgent {
         color: var(--color-red-400);
