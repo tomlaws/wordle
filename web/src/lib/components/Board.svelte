@@ -8,9 +8,11 @@
 	const { matchInfo } = $derived(gameContext);
 
 	$effect(() => {
-		document
-			.getElementById('row-' + matchInfo!.currentRound)
-			?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		try {
+			document
+				.getElementById('row-' + matchInfo!.currentRound)
+				?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		} catch (e) {}
 	});
 
 	function getCharacter(letter) {
@@ -29,11 +31,13 @@
 				<Tooltip
 					content={letter?.letter === '-'.charCodeAt(0) && i < matchInfo!.currentRound - 1
 						? 'Timeout'
-						: (
-							letter?.matchType === 2
-								? 'Hit'
-								: (letter?.matchType === 1 ? 'Present' : (letter?.matchType === 0 ? 'Miss' : ''))
-						)}
+						: letter?.matchType === 2
+							? 'Hit'
+							: letter?.matchType === 1
+								? 'Present'
+								: letter?.matchType === 0
+									? 'Miss'
+									: ''}
 					show={false}
 				>
 					<div

@@ -64,13 +64,11 @@
 	}
 
 	onMount(() => {
-		console.log('Keyboard component mounted, adding keydown listener');
 		window.addEventListener('keydown', onKeyDown);
 		window.addEventListener('keyup', onKeyUp);
 	});
 
 	onDestroy(() => {
-		console.log('Keyboard component unmounted, removing keydown listener');
 		window.removeEventListener('keydown', onKeyDown);
 		window.removeEventListener('keyup', onKeyUp);
 	});
