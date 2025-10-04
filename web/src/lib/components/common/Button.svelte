@@ -55,10 +55,10 @@
     color: var(--color-btn);
 }
 .game-btn.outline:hover:not(:disabled) {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgb(from var(--color-btn) r g b / 0.075);
 }
 .game-btn.outline:active:not(:disabled) {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgb(from var(--color-btn) r g b / 0.15);
     border-color: var(--color-btn-active);
 }
 </style>

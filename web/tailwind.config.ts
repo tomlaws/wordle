@@ -18,7 +18,7 @@ export default {
                         color: '#e5e7eb', // dark mode
                     },
                 },
-            },
+            }
         },
     },
     plugins: [],

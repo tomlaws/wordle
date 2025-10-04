@@ -22,8 +22,14 @@
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--color-primary);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
 :focus {
     --tw-ring-color: var(--color-primary);
+}
+
+html {
+    letter-spacing: 0.05em;
 }

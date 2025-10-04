@@ -84,7 +84,7 @@
 			Waiting for Opponent...
 		</div>
 	{/if} -->
-	<div class="w-full rounded-lg mt-2 mx-2 mb-2 py-1 text-center text-gray-700 dark:text-gray-300 font-semibold uppercase tracking-wide">
+	<div class="w-full rounded-lg mt-2 mx-2 mb-2 py-1 text-center text-gray-700 dark:text-gray-300 font-semibold uppercase">
 		{matchInfo?.myTurn == null
 			? 'Loading'
 			: matchInfo?.myTurn
