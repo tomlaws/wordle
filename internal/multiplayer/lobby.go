@@ -32,7 +32,7 @@ func (l *Lobby) NewPlayer(client Client) *Player {
 		Nickname: client.Nickname(),
 		incoming: protocol.UnwrapChannel(client.Incoming()),
 		outgoing: protocol.WrapChannel(client.Outgoing()),
-		err:      client.Err(),
+		error:    client.Error(),
 	}
 	// Welcome
 	player.outgoing <- &PlayerInfoPayload{
@@ -87,10 +87,10 @@ func (l *Lobby) startGame(p1, p2 *Player) {
 		roundTimeout := time.After(timeout)
 
 		select {
-		case p1Err := <-p1.err:
+		case p1Err := <-p1.error:
 			log.Println("Error from player 1:", p1Err)
 			winner = p2
-		case p2Err := <-p2.err:
+		case p2Err := <-p2.error:
 			log.Println("Error from player 2:", p2Err)
 			winner = p1
 		case <-roundTimeout:
@@ -197,24 +197,29 @@ func (l *Lobby) checkPlayAgain(player *Player) bool {
 
 func (l *Lobby) startMatchingPlayer() {
 	for {
-		p1 := <-l.queue
-		p2 := <-l.queue
-		go func() {
-			timeout := time.After(2 * time.Second)
-			select {
-			case <-p1.err:
-				log.Printf("Player %s has disconnected", p1.Nickname)
-				l.queue <- p2
-			case <-p2.err:
-				log.Printf("Player %s has disconnected", p2.Nickname)
-				l.queue <- p1
-			case <-timeout:
-				log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
-				l.startGame(p1, p2)
-			}
-		}()
-		// Sleep briefly to avoid busy waiting
-		time.Sleep(100 * time.Millisecond)
+		if len(l.queue) >= 2 {
+			p1 := <-l.queue
+			p2 := <-l.queue
+			go func() {
+				timeout := time.After(2 * time.Second)
+				select {
+				case <-p1.error:
+					log.Printf("Player %s has disconnected", p1.Nickname)
+					l.queue <- p2
+				case <-p2.error:
+					log.Printf("Player %s has disconnected", p2.Nickname)
+					l.queue <- p1
+				case <-timeout:
+					log.Printf("Starting game between %s and %s", p1.Nickname, p2.Nickname)
+					l.startGame(p1, p2)
+				}
+			}()
+			// Sleep briefly to avoid busy waiting
+			time.Sleep(100 * time.Millisecond)
+		} else {
+			// Sleep briefly to avoid busy waiting
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 }
 

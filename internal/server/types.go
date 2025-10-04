@@ -31,6 +31,6 @@ func (c *Client) Outgoing() chan json.RawMessage {
 	return c.outgoing
 }
 
-func (c *Client) Err() chan error {
+func (c *Client) Error() chan error {
 	return c.error
 }
