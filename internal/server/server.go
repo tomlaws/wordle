@@ -24,6 +24,7 @@ func handleRead(client *Client) {
 	// handling pong messages from client
 	client.conn.SetReadDeadline(time.Now().Add(pongWait))
 	client.conn.SetPongHandler(func(string) error {
+		// log.Printf("Received pong from player %s", client.nickname)
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
