@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -68,10 +69,10 @@ func handleWrite(client *Client) {
 
 func socketHandler(newClientCallback func(client *Client)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nickname := r.URL.Query().Get("nickname")
-		// Reject if username is blank
-		if nickname == "" {
-			log.Printf("Player connected with blank nickname")
+		nickname := strings.TrimSpace(r.URL.Query().Get("nickname"))
+		if len(nickname) < 3 || len(nickname) > 16 {
+			log.Printf("Player connected with invalid nickname length: %s", nickname)
+			http.Error(w, "Nickname must be between 3 and 16 characters", http.StatusBadRequest)
 			return
 		}
 		Upgrader.CheckOrigin = func(r *http.Request) bool { return true }
