@@ -1,10 +1,10 @@
 <script lang="ts">
     import type { HTMLButtonAttributes } from 'svelte/elements';
-    let { children, ...props }: HTMLButtonAttributes = $props();
+    let { outline = false, children, ...props }: HTMLButtonAttributes & { outline?: boolean } = $props();
 </script>
 
 <button
-    class="game-btn"
+    class="game-btn {outline ? 'outline' : ''}"
     {...props}
 >
     {@render children?.()}
