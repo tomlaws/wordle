@@ -53,7 +53,7 @@
 			{/each}
 		</div>
 	{/each}
-	<div class="pointer-events-none h-[180px]"></div>
+	<div class="pointer-events-none h-[184px]"></div>
 </div>
 
 <style>

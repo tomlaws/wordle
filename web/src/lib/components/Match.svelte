@@ -32,9 +32,9 @@
 				matchInfo!.deadline = msg.getDeadline();
 				matchInfo!.currentGuess = Array(5).fill('');
 				matchInfo!.loading = false;
-				if (matchInfo!.myTurn) {
-					toast.info(`Round ${msg.round} started! It's your turn.`);
-				}
+				// if (matchInfo!.myTurn) {
+				// 	toast.info(`Round ${msg.round} started! It's your turn.`);
+				// }
 			}
 			if (msg instanceof InvalidWordPayload) {
 				console.log('Invalid word received', msg);
@@ -53,7 +53,7 @@
 				if (msg.player.id === playerInfo.id) {
 					toast.error('You ran out of time!');
 				} else {
-					toast.info(`${msg.player.nickname} ran out of time.`);
+					// toast.info(`${msg.player.nickname} ran out of time.`);
 				}
 				matchInfo!.guesses[msg.round - 1] = Array.from({ length: 5 }, (_, i) => ({
 					position: i,

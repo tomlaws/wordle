@@ -77,18 +77,28 @@
 </script>
 
 <div
-	class="fixed bottom-0 left-0 right-0 flex h-[170px] flex-col items-center justify-center bg-white dark:bg-[#191e25]"
+	class="fixed bottom-0 left-0 right-0 flex flex-col items-center justify-center bg-white dark:bg-[#191e25] z-10 border-t border-gray-300 dark:border-gray-700"
 >
-	{#if !matchInfo?.myTurn && matchInfo}
+	<!-- {#if !matchInfo?.myTurn && matchInfo}
 		<div class="keyboard-overlay bg-white opacity-75 dark:bg-[#191e25]">
 			Waiting for Opponent...
 		</div>
-	{/if}
-	<div class="keyboard" class:keyboard--disabled={!matchInfo?.myTurn || matchInfo?.loading}>
+	{/if} -->
+	<div class="w-full rounded-lg mt-2 mx-2 mb-2 py-1 text-center text-gray-700 dark:text-gray-300 font-semibold uppercase tracking-wide">
+		{matchInfo?.myTurn == null
+			? 'Loading'
+			: matchInfo?.myTurn
+				? 'Your Turn!'
+				: 'Waiting for Opponent...'}
+	</div>
+	<div class="keyboard mb-2" class:keyboard--disabled={!matchInfo?.myTurn || matchInfo?.loading}>
 		{#each keyboardRows as row}
 			<div class="key-row">
 				{#each row as key}
-					<Tooltip content={key === 'Backspace' ? 'Delete' : (key === 'Enter' ? 'Submit' : '')} show={false}>
+					<Tooltip
+						content={key === 'Backspace' ? 'Delete' : key === 'Enter' ? 'Submit' : ''}
+						show={false}
+					>
 						<button
 							class="key {pressedKey === key
 								? 'pressed'
