@@ -4,17 +4,27 @@
 	import { payloadRegistry } from './payload-registry';
 	import { createWebSocket } from '$lib/utils/websocket';
 	import { GameStartPayload, MatchingPayload, PlayerInfoPayload } from '$lib/types/payload';
-	import { onMount, setContext } from 'svelte';
+	import { getContext, setContext } from 'svelte';
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
 	import Lobby from '$lib/components/Lobby.svelte';
 	import { GameState } from '$lib/types/state';
 	import Button from '$lib/components/common/Button.svelte';
 	import Input from '$lib/components/common/Input.svelte';
+	import { catchError, of } from 'rxjs';
+	import { type ToastAPI, TOAST_KEY } from '$lib/context/toast-context';
+
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
 	setContext<Partial<GameContext>>(GAME_KEY, gameContext);
+	const toast = getContext<ToastAPI>(TOAST_KEY);
+		
 	function enterGame() {
+		const trimmed = nickname.trim();
+		if (!trimmed || trimmed.length < 3 || trimmed.length > 16) {
+			toast.error('Nickname must be between 3 and 16 characters long.');
+			return;
+		}
 		const protocol = new Protocol(payloadRegistry);
 		if (!gameContext.websocket) {
 			gameContext.websocket = createWebSocket(
@@ -23,31 +33,38 @@
 				(msg: Message) => protocol.parseMessage(msg)
 			);
 		}
-		gameContext.websocket.messages$.subscribe((msg) => {
-			if (msg instanceof PlayerInfoPayload) {
-				gameState = GameState.AUTHENTICATED;
-				gameContext.playerInfo = { id: msg.id, nickname: msg.nickname };
-			}
-			if (msg instanceof MatchingPayload) {
-				gameState = GameState.MATCHING;
-				// find header element and make it visible
-				document.getElementById('header')?.classList.remove('hidden');
-			}
-			if (msg instanceof GameStartPayload) {
-				gameState = GameState.IN_GAME;
-				gameContext.matchInfo = {
-					loading: true,
-					player1: msg.player1,
-					player2: msg.player2,
-					guesses: Array.from({ length: 12 }, () => Array(5).fill(null)),
-					currentRound: -1,
-					currentGuess: Array(5).fill(''),
-					myTurn: false
-				};
-				// find header element and make it invisible
-				document.getElementById('header')?.classList.add('hidden');
-			}
-		});
+		gameContext.websocket.messages$
+			.pipe(
+				catchError((error) => {
+					console.error('WebSocket error:', error);
+					return of([]);
+				}),
+			)
+			.subscribe((msg) => {
+				if (msg instanceof PlayerInfoPayload) {
+					gameState = GameState.AUTHENTICATED;
+					gameContext.playerInfo = { id: msg.id, nickname: msg.nickname };
+				}
+				if (msg instanceof MatchingPayload) {
+					gameState = GameState.MATCHING;
+					// find header element and make it visible
+					document.getElementById('header')?.classList.remove('hidden');
+				}
+				if (msg instanceof GameStartPayload) {
+					gameState = GameState.IN_GAME;
+					gameContext.matchInfo = {
+						loading: true,
+						player1: msg.player1,
+						player2: msg.player2,
+						guesses: Array.from({ length: 12 }, () => Array(5).fill(null)),
+						currentRound: -1,
+						currentGuess: Array(5).fill(''),
+						myTurn: false
+					};
+					// find header element and make it invisible
+					document.getElementById('header')?.classList.add('hidden');
+				}
+			});
 	}
 </script>
 
