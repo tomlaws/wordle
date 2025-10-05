@@ -37,7 +37,7 @@
 <div
 	class="min-h-screen bg-white text-gray-900 transition-colors duration-300 dark:bg-[#191e25] dark:text-gray-100"
 >
-	<header class="fixed left-0 right-0 flex items-center justify-between p-4">
+	<header class="fixed left-0 right-0 flex items-center justify-between py-4 px-8">
 		<h1 class="text-2xl font-bold uppercase">Wordle</h1>
 		<button
 			class="rounded-md bg-gray-200 p-2 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer"
