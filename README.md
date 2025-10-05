@@ -38,10 +38,33 @@ go run -ldflags="-X main.Port=8080 -X main.MaxGuesses=6 -X main.WordListPath=ass
 - **Word List:** The default word list is located at `assets/words.txt`.
 - **Think Time:** Each player has 60 seconds per turn by default.
 
-### Running the Client
+### Running the Console Client
 ```sh
 go run cmd/client/main.go
 ```
+
+### Running the Web Client
+
+#### Setup
+Install dependencies:
+```sh
+cd web
+npm install
+```
+
+#### Start in Development Mode
+Launch the development server with hot reloading:
+```sh
+npm run dev
+```
+The app will be available at [http://localhost:5173](http://localhost:5173) by default.
+
+#### Build for Production
+Generate an optimized production build:
+```sh
+npm run build
+```
+The output will be in the `web/build` directory.
 
 ## Usage
 - Start the server and client as above.

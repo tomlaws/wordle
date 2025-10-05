@@ -7,9 +7,7 @@
 		GuessTimeoutPayload,
 		InvalidWordPayload,
 		RoundStartPayload,
-
 		TypingPayload
-
 	} from '$lib/types/payload';
 	import { getContext, onMount } from 'svelte';
 	import MatchHeader from './match/MatchHeader.svelte';

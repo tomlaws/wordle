@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import { createMockWebSocket } from '$lib/utils/websocket';
 import type { Payload } from '$lib/utils/message';
 import { FeedbackPayload, GameOverPayload, GuessTimeoutPayload, InvalidWordPayload, RoundStartPayload } from '$lib/types/payload';
-import { flushSync, tick } from 'svelte';
+import { flushSync } from 'svelte';
 import { TOAST_KEY } from '$lib/context/toast-context';
 import { mockToast } from '$lib/mocks/toast-mock';
 import { GAME_KEY, type GameContext } from '$lib/context/game-context';
