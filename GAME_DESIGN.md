@@ -16,15 +16,15 @@
 
 ## Rules
 - Two players compete to guess the same hidden word.
-- The game consists of 12 rounds in total (6 turns per player).
+- The game consists of 6 rounds in total (3 turns per player).
 - Players take turns alternately.
 - Each player has up to 60 seconds to submit a guess per turn. If time runs out, the turn is skipped.
 - After each guess, feedback is provided and visible to both players.
 - The first player to correctly guess the word wins immediately.
-- If neither player guesses the word within 12 rounds, the game ends in a tie.
+- If neither player guesses the word within 6 rounds, the game ends in a tie.
 
 ### Rule Justification
-The rules are designed for simplicity and fast-paced gameplay. Limiting each player to 6 turns and 60 seconds per guess keeps matches short and engaging, reducing downtime and making the game accessible to new players. Alternating turns and immediate feedback ensure fairness and maintain excitement.
+The rules are designed for simplicity and fast-paced gameplay. Limiting each player to 3 turns and 60 seconds per guess keeps matches short and engaging, reducing downtime and making the game accessible to new players. Alternating turns and immediate feedback ensure fairness and maintain excitement.
 
 ---
 
@@ -153,6 +153,7 @@ While this approach simplifies the design and implementation, it also means that
                     "id": "3d6a2e36-30c0-4812-89a6-39bcb1b6edc2",
                     "nickname": "Tom",
                 },
+                "round": 1,
                 "word": "aeiou"
             }
     }
