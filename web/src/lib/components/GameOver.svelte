@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { GAME_KEY, type GameContext } from '$lib/context/game-context';
-	import { PlayAgainPayload, type GameOverPayload } from '$lib/types/payload';
-	export { GameOverPayload } from '$lib/types/payload';
+	import { PlayAgainPayload } from '$lib/types/payload';
 	import { getContext } from 'svelte';
 	import Button from './common/Button.svelte';
 

@@ -1,4 +1,4 @@
-import type { FeedbackPayload, GameOverPayload } from "$lib/types/payload";
+import  { FeedbackPayload, GameOverPayload } from "$lib/types/payload";
 import type { Payload } from "$lib/utils/message";
 import type { WebSocketConnection } from "$lib/utils/websocket";
 
