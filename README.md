@@ -2,6 +2,8 @@
 
 A real-time, multiplayer Wordle game built with Go, featuring queue-based matchmaking and a WebSocket protocol.
 
+<img src="https://i.imgur.com/EwnRwVv.jpeg" width="480"/>
+
 ## Features
 - Multiplayer: Two players compete to guess the same hidden word.
 - Real-time feedback: Both players see each other's guesses and feedback.
