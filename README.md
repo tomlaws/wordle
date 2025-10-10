@@ -70,7 +70,7 @@ The output will be in the `web/build` directory.
 - Start the server and client as above.
 - The client will connect to the server, join the matchmaking queue, and start a game when matched.
 - Enter your guesses when prompted. Each guess must be a valid 5-letter word.
-- The first player to guess the word wins. If neither guesses correctly in 12 rounds, the game is a tie.
+- The first player to guess the word wins. If neither guesses correctly in 6 rounds, the game is a tie.
 
 ## Design
 See `GAME_DESIGN.md` for full details on architecture, game flow, and design decisions.
@@ -85,7 +85,7 @@ or to provide a custom configuration
 go run -ldflags="-X main.MaxGuesses=6 -X main.WordListPath=assets/words.txt" cmd/standalone/main.go
 ```
 #### Configuration
-- **Max Guesses:** The maximum number of guesses per player is 12 by default.
+- **Max Guesses:** The maximum number of guesses is 6 by default.
 - **Word List:** The default word list is located at `assets/words.txt`.
 
 ## Acknowledgments
