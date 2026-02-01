@@ -86,7 +86,9 @@
 		{matchInfo?.myTurn == null
 			? 'Loading'
 			: matchInfo?.myTurn
-				? 'Your Turn!'
+				? matchInfo?.currentGuess?.every((l) => l)
+					? 'Press Enter to submit!'
+					: 'Your Turn!'
 				: 'Waiting for Opponent...'}
 	</div>
 	<div class="keyboard mb-2" class:keyboard--disabled={!matchInfo?.myTurn || matchInfo?.loading}>
