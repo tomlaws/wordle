@@ -12,13 +12,13 @@
 	import Input from '$lib/components/common/Input.svelte';
 	import { catchError, of } from 'rxjs';
 	import { type ToastAPI, TOAST_KEY } from '$lib/context/toast-context';
-
+	import { PUBLIC_WEBSOCKET_SERVER } from '$env/static/public';
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
 	setContext<Partial<GameContext>>(GAME_KEY, gameContext);
 	const toast = getContext<ToastAPI>(TOAST_KEY);
-		
+
 	function enterGame() {
 		const trimmed = nickname.trim();
 		if (!trimmed || trimmed.length < 3 || trimmed.length > 16) {
@@ -28,7 +28,7 @@
 		const protocol = new Protocol(payloadRegistry);
 		if (!gameContext.websocket) {
 			gameContext.websocket = createWebSocket(
-				'ws://127.0.0.1:8080/socket?nickname=' + encodeURIComponent(nickname),
+				PUBLIC_WEBSOCKET_SERVER + '/socket?nickname=' + encodeURIComponent(nickname),
 				(payload: Payload) => protocol.createMessage(payload),
 				(msg: Message) => protocol.parseMessage(msg)
 			);
@@ -38,7 +38,7 @@
 				catchError((error) => {
 					console.error('WebSocket error:', error);
 					return of([]);
-				}),
+				})
 			)
 			.subscribe((msg) => {
 				if (msg instanceof PlayerInfoPayload) {
