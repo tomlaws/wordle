@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Top Left: Green -->
+  <rect x="32" y="32" width="208" height="208" rx="40" fill="#64c4fd" />
+  <!-- Top Right: Yellow -->
+  <rect x="272" y="32" width="208" height="208" rx="40" fill="#f38484" />
+  <!-- Bottom Left: Gray -->
+  <rect x="32" y="272" width="208" height="208" rx="40" fill="#7fc579" />
+  <!-- Bottom Right: Dark -->
+  <rect x="272" y="272" width="208" height="208" rx="40" fill="#a78bfa" />
+</svg>
