@@ -10,13 +10,20 @@
 
 	let dark = $state(false);
 	onMount(() => {
-		const saved = localStorage.getItem('theme');
-		if (saved) {
-			dark = saved === 'dark';
-		} else {
-			dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		}
-		setDarkClass(dark);
+		// Sync with the class set by the inline script in app.html
+		dark = document.documentElement.classList.contains('dark');
+
+		// Listen for system theme changes
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleChange = (e: MediaQueryListEvent) => {
+			if (!localStorage.getItem('theme')) {
+				dark = e.matches;
+				setDarkClass(dark);
+			}
+		};
+
+		mediaQuery.addEventListener('change', handleChange);
+		return () => mediaQuery.removeEventListener('change', handleChange);
 	});
 
 	function toggleDark() {

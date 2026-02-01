@@ -20,7 +20,12 @@
     --color-input-border: #3f4f69;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: var(--color-primary);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -32,4 +37,8 @@ h1, h2, h3, h4, h5, h6 {
 
 html {
     letter-spacing: 0.05em;
+}
+
+html.dark {
+    background: #191e25;
 }

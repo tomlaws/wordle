@@ -19,6 +19,17 @@
 		<meta property="twitter:title" content="Wordle Multiplayer" />
 		<meta property="twitter:description" content="Battle against friends in real-time. Who can guess the word first?" />
 
+		<script>
+			if (
+				localStorage.theme === 'dark' ||
+				(!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+			) {
+				document.documentElement.classList.add('dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+			}
+		</script>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
