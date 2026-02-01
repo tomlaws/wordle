@@ -40,6 +40,7 @@
 						matchInfo!.currentGuess = Array(5).fill('');
 						toast.error(`${msg.word} is not a valid word.`);
 					} else {
+						matchInfo!.currentGuess = Array(5).fill('');
 						toast.warning(`${msg.player.nickname} guessed an invalid word ${msg.word}.`);
 					}
 				}
