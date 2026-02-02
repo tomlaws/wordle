@@ -35,6 +35,10 @@ h6 {
     --tw-ring-color: var(--color-primary);
 }
 
+* {
+    touch-action: manipulation;
+}
+
 html {
     letter-spacing: 0.05em;
 }
