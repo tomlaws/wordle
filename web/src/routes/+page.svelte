@@ -12,7 +12,7 @@
 	import Input from '$lib/components/common/Input.svelte';
 	import { catchError, of } from 'rxjs';
 	import { type ToastAPI, TOAST_KEY } from '$lib/context/toast-context';
-	import { PUBLIC_WEBSOCKET_SERVER } from '$env/static/public';
+	const PUBLIC_WEBSOCKET_SERVER = import.meta.env.PUBLIC_WEBSOCKET_SERVER;
 	let nickname = $state('');
 	let gameState = $state<GameState>(GameState.UNAUTHENTICATED);
 	let gameContext = $state<Partial<GameContext>>({});
